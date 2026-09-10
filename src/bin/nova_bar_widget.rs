@@ -623,7 +623,7 @@ mod tests {
             )
         );
         assert!(plugin_block.contains(
-            "format_right \" #[fg=#00ff88,bold] hx{pipe_workspace} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_cpu} #[fg=#6c7086,bold]• #[fg=#ffff00,bold][demo] #[fg=#6c7086,bold]• #[fg=#00ccff,bold]{command_version} \""
+            "format_right \"#[fg=#00ff88,bold] hx{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}\""
         ));
         assert!(plugin_block.contains(r##"tab_normal "#[fg=#ffff00] [{index}] ""##));
         assert!(plugin_block.contains(
@@ -632,7 +632,7 @@ mod tests {
         assert!(plugin_block.contains(r##"tab_bell_indicator       """##));
         assert!(!plugin_block.contains("tab_activity"));
         assert!(plugin_block.contains(
-            r##"pipe_workspace_format " #[fg=#6c7086,bold]• #[fg=#00ff88,bold]{output}""##
+            r##"pipe_workspace_format "#[fg=#00ff88,bold]{output}""##
         ));
         assert!(plugin_block.contains(r#"format_left   "{tabs}""#));
         assert!(!plugin_block.contains("{mode}"));

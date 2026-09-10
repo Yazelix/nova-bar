@@ -69,6 +69,14 @@ None of those widget commands require Nova runtime paths, `yzx_control`, or a No
 
 Nova keeps zjstatus `{tabs}` as the integrated tab strip so Zellij owns live tab identity, focus, click handling, and bell events. Execution and agent activity are not rendered in tab labels; Nova's Radar sidebar owns that presentation.
 
+The integrated bar gives tabs priority over widgets. The version badge disappears
+first, followed by widgets from right to left; the configured left-to-right order
+is preserved. Empty widgets and their separators take no space, and widgets return
+as the bar widens. If tabs alone overflow, zjstatus keeps the active tab visible
+and shortens its name only as a last resort. Nova Bar emits complete `{segment}`
+bodies and `format_right_separator`; zjstatus owns width and click geometry under
+its BAR-WIDTH-001 contract. Standalone presets retain their existing configuration.
+
 ## Optional Command Widgets
 
 Standalone users can add zjstatus command widgets directly in their own copied preset. Command stdout should be short plain text because the KDL format owns the style.

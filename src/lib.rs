@@ -1036,33 +1036,37 @@ fn runtime_theme_fields(
     style: &BarStyle,
     chrome: WidgetChrome,
 ) -> Result<Vec<(&'static str, String)>, BarRenderError> {
-    let segments = render_zjstatus_bar_segments_with_style(
-        &BarRenderRequest {
-            widget_tray: config.widget_tray.clone(),
-            editor_label: config.editor_label.clone(),
-            shell_label: config.shell_label.clone(),
-            terminal_label: config.terminal_label.clone(),
-            custom_text: config.custom_text.clone(),
-        },
-        style,
-        chrome,
-    )?;
+    let request = BarRenderRequest {
+        widget_tray: config.widget_tray.clone(),
+        editor_label: config.editor_label.clone(),
+        shell_label: config.shell_label.clone(),
+        terminal_label: config.terminal_label.clone(),
+        custom_text: config.custom_text.clone(),
+    };
+    let segment_chrome = WidgetChrome {
+        separator: WidgetSeparator::Empty,
+        ..chrome
+    };
+    let mut segments = request
+        .widget_tray
+        .iter()
+        .map(|widget| render_widget_with_style(widget, &request, style, segment_chrome, false))
+        .collect::<Result<Vec<_>, _>>()?;
+    if !config.custom_text.trim().is_empty() {
+        segments.push(render_runtime_custom_text_segment_with_style(
+            &config.custom_text,
+            style,
+            segment_chrome,
+            false,
+        ));
+    }
+    segments.push(format!("{}{}", style.brand, COMMAND_VERSION));
     let tabs = render_zjstatus_tab_label_formats_with_style(&config.tab_label_mode, style)?;
-    let has_content_before_version =
-        !config.widget_tray.is_empty() || !config.custom_text.trim().is_empty();
     Ok(vec![
+        ("format_right", segments.join("{segment}")),
         (
-            "format_right",
-            format!(
-                "{}{}{}",
-                segments.widget_tray_segment,
-                segments.custom_text_segment,
-                render_runtime_version_segment_with_style(
-                    style,
-                    chrome,
-                    !has_content_before_version,
-                )
-            ),
+            "format_right_separator",
+            chrome.styled_segment_prefix(false, style),
         ),
         ("tab_normal", kdl_assignment_value(&tabs.tab_normal)),
         (
@@ -1102,12 +1106,7 @@ fn runtime_theme_fields(
         ("datetime", format!("{} {{format}} ", style.datetime)),
         (
             "pipe_workspace_format",
-            runtime_widget_format(
-                style.workspace,
-                chrome,
-                style,
-                widget_first_position(&config.widget_tray, WIDGET_WORKSPACE),
-            ),
+            format!("{}{}", style.workspace, chrome.frame.frame("{output}")),
         ),
     ])
 }
@@ -1287,35 +1286,12 @@ fn unresolved_runtime_preset_placeholder(rendered: &str) -> Option<String> {
     Some(rendered[start..start + RUNTIME_PLACEHOLDER_PREFIX.len() + end + 2].to_string())
 }
 
-fn widget_first_position(widget_tray: &[String], widget: &str) -> bool {
-    widget_tray
-        .iter()
-        .position(|entry| entry == widget)
-        .unwrap_or(usize::MAX)
-        == 0
-}
-
 fn runtime_command_widget_args(chrome: WidgetChrome) -> String {
     format!(
         " --widget-frame {} --widget-separator {} --widget-first {}",
         chrome.frame.as_str(),
         WIDGET_SEPARATOR_EMPTY,
         "false"
-    )
-}
-
-fn runtime_widget_format(
-    style_prefix: &str,
-    chrome: WidgetChrome,
-    style: &BarStyle,
-    first: bool,
-) -> String {
-    let output = chrome.frame.frame("{output}");
-    format!(
-        "{}{}{}",
-        chrome.styled_segment_prefix(first, style),
-        style_prefix,
-        output
     )
 }
 
@@ -1365,19 +1341,6 @@ fn render_runtime_custom_text_segment_with_style(
             style.custom_text
         )
     }
-}
-
-fn render_runtime_version_segment_with_style(
-    style: &BarStyle,
-    chrome: WidgetChrome,
-    first: bool,
-) -> String {
-    format!(
-        "{}{}{} ",
-        chrome.styled_segment_prefix(first, style),
-        style.brand,
-        COMMAND_VERSION
-    )
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -3418,7 +3381,7 @@ mod tests {
         assert!(rendered.contains(r##"host_theme_light_tab_normal "#[fg=#5c5f77] [{index}] ""##));
         assert_eq!(
             runtime_assignment(&rendered, "format_right"),
-            " #[fg=#ff0088,bold]{session} #[fg=#6c7086,bold]• #[fg=#00ff88,bold] hx{pipe_workspace} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_cpu} #[fg=#6c7086,bold]• #[fg=#ffff00,bold][demo] #[fg=#6c7086,bold]• #[fg=#00ccff,bold]{command_version} "
+            "#[fg=#ff0088,bold]{session}{segment}#[fg=#00ff88,bold] hx{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}"
         );
         assert!(rendered.contains(r#"format_left   "{tabs}""#));
         assert!(!rendered.contains("{mode}"));
@@ -3430,9 +3393,7 @@ mod tests {
             r##"tab_normal_bell "#[fg=#ff0088,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
         ));
         assert!(rendered.contains(r##"tab_bell_indicator       """##));
-        assert!(rendered.contains(
-            r##"pipe_workspace_format " #[fg=#6c7086,bold]• #[fg=#00ff88,bold]{output}""##
-        ));
+        assert!(rendered.contains(r##"pipe_workspace_format "#[fg=#00ff88,bold]{output}""##));
         assert!(rendered.contains(r#"command_term_command "/runtime/bin/nova_bar_widget term""#));
         assert!(rendered.contains(r##"command_term_format "{stdout}""##));
         assert!(rendered.contains(r##"command_term_rendermode "raw""##));
@@ -3467,13 +3428,11 @@ mod tests {
         assert!(rendered.contains(
             r#"command_cpu_command "/runtime/bin/nova_bar_widget cpu --widget-frame square --widget-separator empty --widget-first false""#
         ));
-        assert!(rendered.contains(
-            r##"pipe_workspace_format " #[fg=#6c7086,bold]| #[fg=#00ff88,bold][{output}]""##
-        ));
+        assert!(rendered.contains(r##"pipe_workspace_format "#[fg=#00ff88,bold][{output}]""##));
         assert!(rendered.contains(r##"command_cpu_format "{stdout}""##));
         assert_eq!(
             runtime_assignment(&rendered, "format_right"),
-            " #[fg=#ff0088,bold][{session}] #[fg=#6c7086,bold]| #[fg=#00ff88,bold][ hx]{pipe_workspace} #[fg=#6c7086,bold]| #[fg=#ff6600]{command_cpu} #[fg=#6c7086,bold]| #[fg=#ffff00,bold][demo] #[fg=#6c7086,bold]| #[fg=#00ccff,bold]{command_version} "
+            "#[fg=#ff0088,bold][{session}]{segment}#[fg=#00ff88,bold][ hx]{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}"
         );
     }
 
@@ -3504,7 +3463,7 @@ mod tests {
         assert!(rendered.contains(r##"host_theme_dark_tab_normal "#[fg=#ffff00] [{index}] ""##));
         assert_eq!(
             runtime_assignment(&rendered, "format_right"),
-            " #[fg=#7c3f97,bold]{session} #[fg=#8c8fa1,bold]• #[fg=#2f7d32,bold] hx{pipe_workspace} #[fg=#8c8fa1,bold]• #[fg=#a24f00]{command_cpu} #[fg=#8c8fa1,bold]• #[fg=#9a5a00,bold][demo] #[fg=#8c8fa1,bold]• #[fg=#1e66f5,bold]{command_version} "
+            "#[fg=#7c3f97,bold]{session}{segment}#[fg=#2f7d32,bold] hx{segment}{pipe_workspace}{segment}#[fg=#a24f00]{command_cpu}{segment}#[fg=#9a5a00,bold][demo]{segment}#[fg=#1e66f5,bold]{command_version}"
         );
         assert!(!rendered.contains("mode_normal"));
         assert_eq!(
@@ -3517,9 +3476,7 @@ mod tests {
         assert!(rendered.contains(
             r##"tab_normal_flashing_bell "#[bg=#b4637a,fg=#fffaf3,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
         ));
-        assert!(rendered.contains(
-            r##"pipe_workspace_format " #[fg=#8c8fa1,bold]• #[fg=#2f7d32,bold]{output}""##
-        ));
+        assert!(rendered.contains(r##"pipe_workspace_format "#[fg=#2f7d32,bold]{output}""##));
         assert!(rendered.contains(r##"command_codex_usage_format "{stdout}""##));
         assert!(rendered.contains(r##"command_codex_usage_rendermode "raw""##));
         assert!(rendered.contains(r##"command_cpu_format "{stdout}""##));

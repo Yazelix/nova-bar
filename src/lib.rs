@@ -3414,6 +3414,7 @@ mod tests {
 
         assert!(NOVA_RUNTIME_BAR_TEMPLATE.contains(RUNTIME_ACTIVE_THEME_FIELDS_PLACEHOLDER));
         assert!(rendered.starts_with(r#""file:/runtime/share/zjstatus.wasm" {"#));
+        assert!(!rendered.contains("tab_display_count"));
         assert!(rendered.contains(r#"host_theme_mode "dark""#));
         assert!(rendered.contains(r##"host_theme_light_tab_normal "#[fg=#5c5f77] [{index}] ""##));
         assert_eq!(

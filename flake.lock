@@ -140,15 +140,16 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1780512417,
-        "narHash": "sha256-/LsFGF0BAYdiVVQZ/8vjo6IXuSsYS+ueIWHN47NHEAc=",
-        "owner": "dj95",
+        "lastModified": 1789145525,
+        "narHash": "sha256-26HzG9/4q37yHM4DhS/EX3WyfiLDrJJcqcpzbQUn6Gs=",
+        "owner": "Yazelix",
         "repo": "zjstatus",
-        "rev": "17609e498f88e674b846b844b48ad1dc545fddcf",
+        "rev": "b71c6c6fc1ff21a456a9e8f7351df0e4ec1a3e74",
         "type": "github"
       },
       "original": {
-        "owner": "dj95",
+        "owner": "Yazelix",
+        "ref": "yazelix-tab-activity-pipe",
         "repo": "zjstatus",
         "type": "github"
       }

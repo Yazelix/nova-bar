@@ -1,4 +1,5 @@
-plugin location="__YAZELIX_RUNTIME_ZJSTATUS_PLUGIN_URL__" {
+"__YAZELIX_RUNTIME_ZJSTATUS_PLUGIN_URL__" {
+    role "controller"
     format_left   "{tabs}"
     format_center ""
 __YAZELIX_RUNTIME_ACTIVE_THEME_FIELDS__

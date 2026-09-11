@@ -77,7 +77,9 @@ and shortens its name only as a last resort. Nova Bar emits complete `{segment}`
 bodies and `format_right_separator`; zjstatus owns width and click geometry under
 its BAR-WIDTH-001 contract. Standalone presets retain their existing configuration.
 Nova's integrated preset shows compact command placeholders on the first render
-and replaces each one when its result arrives.
+and replaces each one when its result arrives. One background zjstatus controller
+owns bar state and command refreshes; each per-tab view displays a targeted frame
+and forwards mouse input.
 
 ## Optional Command Widgets
 
@@ -152,6 +154,7 @@ The Rust crate also exposes renderer helpers for embedders that want Nova-style 
 - `render_zjstatus_bar_segments` for editor, shell, terminal, custom text, and widget-tray placeholders
 - `render_zjstatus_tab_label_formats` for full and compact tab labels
 - `render_nova_runtime_plugin_block` for the integrated Nova zjstatus plugin block from typed runtime config, `appearance_mode`, and the child-owned runtime KDL template
+- `render_nova_runtime_background_plugin_block` for its matching session controller
 - `render_codex_usage_status_widget` for cached Codex usage facts
 - `render_windowed_agent_usage_status_widget` for Claude, OpenCode Go, or another cached windowed provider
 
@@ -187,7 +190,7 @@ CPU, RAM, Codex, Claude, and OpenCode Go widgets are bar-owned standalone comman
 
 Nova consumes this child repo for integrated zjstatus plugin rendering and the standalone package. The child repo packages `zjstatus.wasm` from its pinned `zjstatus` flake input, so the package does not require manual artifact copying. The standalone pin supports native bell tab formatting. Nova supplies a narrow Yazelix `zjstatus` fork for host-theme switching and separator-safe workspace pipes.
 
-`nova_bar_widget render-nova-runtime --json <config>` accepts typed runtime config from Nova and returns the complete child-owned zjstatus plugin block rendered from `nova_runtime_bar.template.kdl`. The runtime config includes `appearance_mode` so Nova Bar can own dark and light palettes. The integrated template uses zjstatus `{tabs}` for live Zellij tab state, terminal-bell styling, and native layout indicators. Nova core owns workspace facts, session config, and runtime path resolution. This repo owns widget rendering, tab formatting, pipe and command-widget KDL, and the generic zjstatus plugin shape.
+`nova_bar_widget render-nova-runtime --json <config>` accepts typed runtime config from Nova and returns schema 4 with the matched `plugin_block` view and `background_plugin_block` controller rendered from `nova_runtime_bar.template.kdl`. The runtime config includes `appearance_mode` so Nova Bar can own dark and light palettes. The integrated template uses zjstatus `{tabs}` for live Zellij tab state, terminal-bell styling, and native layout indicators. Nova core owns workspace facts, session config, and runtime path resolution. This repo owns widget rendering, tab formatting, pipe and command-widget KDL, and the generic zjstatus plugin shape.
 
 Nova makes this repo's `zjstatus` input follow its own pin. Standalone users get the pin recorded in this repo's `flake.lock`.
 

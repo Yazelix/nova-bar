@@ -158,10 +158,13 @@ fn run_render_nova_runtime(args: &[String]) -> Result<String, String> {
         .map_err(|error| format!("invalid runtime bar config json: {error}"))?;
     let plugin_block = nova_bar::render_nova_runtime_plugin_block(&config)
         .map_err(|error| format!("failed to render Nova runtime bar: {}", error.code()))?;
+    let background_plugin_block = nova_bar::render_nova_runtime_background_plugin_block(&config)
+        .map_err(|error| format!("failed to render Nova runtime bar: {}", error.code()))?;
 
     serde_json::to_string(&nova_bar::NovaRuntimeBarRender {
         schema_version: nova_bar::NOVA_RUNTIME_BAR_RENDER_SCHEMA_VERSION,
         plugin_block,
+        background_plugin_block,
     })
     .map_err(|error| format!("failed to encode Nova runtime bar render: {error}"))
 }
@@ -615,33 +618,38 @@ mod tests {
         .unwrap();
         let rendered: serde_json::Value = serde_json::from_str(&output).unwrap();
 
-        assert_eq!(rendered["schema_version"], 3);
+        assert_eq!(rendered["schema_version"], 4);
         let plugin_block = rendered["plugin_block"].as_str().unwrap();
         assert!(
             plugin_block.contains(
                 r#"plugin location="file:/runtime/configs/zellij/plugins/zjstatus.wasm" {"#
             )
         );
-        assert!(plugin_block.contains(
+        assert!(plugin_block.contains(r#"role "view""#));
+        assert!(!plugin_block.contains("format_"));
+        let background = rendered["background_plugin_block"].as_str().unwrap();
+        assert!(
+            background.starts_with(r#""file:/runtime/configs/zellij/plugins/zjstatus.wasm" {"#)
+        );
+        assert!(background.contains(r#"role "controller""#));
+        assert!(background.contains(
             "format_right \"#[fg=#00ff88,bold] hx{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}\""
         ));
-        assert!(plugin_block.contains(r##"tab_normal "#[fg=#ffff00] [{index}] ""##));
-        assert!(plugin_block.contains(
+        assert!(background.contains(r##"tab_normal "#[fg=#ffff00] [{index}] ""##));
+        assert!(background.contains(
             r##"tab_normal_bell "#[fg=#ff0088,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
         ));
-        assert!(plugin_block.contains(r##"tab_bell_indicator       """##));
-        assert!(!plugin_block.contains("tab_activity"));
-        assert!(plugin_block.contains(
-            r##"pipe_workspace_format "#[fg=#00ff88,bold]{output}""##
-        ));
-        assert!(plugin_block.contains(r#"format_left   "{tabs}""#));
-        assert!(!plugin_block.contains("{mode}"));
-        assert!(!plugin_block.contains("command_yazelix_tabs_command"));
-        assert!(!plugin_block.contains("command_workspace_command"));
-        assert!(plugin_block.contains(
+        assert!(background.contains(r##"tab_bell_indicator       """##));
+        assert!(!background.contains("tab_activity"));
+        assert!(background.contains(r##"pipe_workspace_format "#[fg=#00ff88,bold]{output}""##));
+        assert!(background.contains(r#"format_left   "{tabs}""#));
+        assert!(!background.contains("{mode}"));
+        assert!(!background.contains("command_yazelix_tabs_command"));
+        assert!(!background.contains("command_workspace_command"));
+        assert!(background.contains(
             "/runtime/libexec/nova_bar_widget codex --display quota --periods 5h,week --widget-frame none --widget-separator empty --widget-first false"
         ));
-        assert!(plugin_block.contains(
+        assert!(background.contains(
             "/runtime/libexec/nova_bar_widget cpu --widget-frame none --widget-separator empty --widget-first false"
         ));
     }

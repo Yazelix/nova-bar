@@ -208,7 +208,7 @@ pub struct BarRenderData {
     pub custom_text_segment: String,
 }
 
-pub const NOVA_RUNTIME_BAR_RENDER_SCHEMA_VERSION: u64 = 3;
+pub const NOVA_RUNTIME_BAR_RENDER_SCHEMA_VERSION: u64 = 4;
 const NOVA_RUNTIME_BAR_TEMPLATE: &str = include_str!("../presets/nova_runtime_bar.template.kdl");
 const RUNTIME_PLACEHOLDER_PREFIX: &str = "__YAZELIX_RUNTIME_";
 const RUNTIME_ZJSTATUS_PLUGIN_URL_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_ZJSTATUS_PLUGIN_URL__";
@@ -291,6 +291,7 @@ pub struct NovaRuntimeBarConfig {
 pub struct NovaRuntimeBarRender {
     pub schema_version: u64,
     pub plugin_block: String,
+    pub background_plugin_block: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1175,6 +1176,19 @@ fn render_zjstatus_bar_segments_with_style(
 pub fn render_nova_runtime_plugin_block(
     config: &NovaRuntimeBarConfig,
 ) -> Result<String, BarRenderError> {
+    Ok(format!(
+        "plugin location=\"{}\" {{\n    role \"view\"\n}}",
+        escape_kdl_string(&config.zjstatus_plugin_url)
+    ))
+}
+
+pub fn render_nova_runtime_background_plugin_block(
+    config: &NovaRuntimeBarConfig,
+) -> Result<String, BarRenderError> {
+    render_nova_runtime_block(config)
+}
+
+fn render_nova_runtime_block(config: &NovaRuntimeBarConfig) -> Result<String, BarRenderError> {
     let appearance_mode = runtime_bar_appearance(&config.appearance_mode);
     let chrome = WidgetChrome::parse(&config.widget_frame, &config.widget_separator)?;
     let dark_theme = runtime_theme_fields(config, &DARK_BAR_STYLE, chrome)?;
@@ -3395,11 +3409,11 @@ mod tests {
     // Regression: integrated Yazelix KDL shape is owned by the child runtime template, not hardcoded in main or rebuilt as Rust string assembly.
     // Strength: defect=2 behavior=2 resilience=2 cost=1 uniqueness=2 total=9/10
     #[test]
-    fn renders_nova_runtime_plugin_block_from_template() {
-        let rendered = render_nova_runtime_plugin_block(&runtime_bar_config()).unwrap();
+    fn renders_nova_runtime_controller_block_from_template() {
+        let rendered = render_nova_runtime_background_plugin_block(&runtime_bar_config()).unwrap();
 
         assert!(NOVA_RUNTIME_BAR_TEMPLATE.contains(RUNTIME_ACTIVE_THEME_FIELDS_PLACEHOLDER));
-        assert!(rendered.contains(r#"plugin location="file:/runtime/share/zjstatus.wasm" {"#));
+        assert!(rendered.starts_with(r#""file:/runtime/share/zjstatus.wasm" {"#));
         assert!(rendered.contains(r#"host_theme_mode "dark""#));
         assert!(rendered.contains(r##"host_theme_light_tab_normal "#[fg=#5c5f77] [{index}] ""##));
         assert_eq!(
@@ -3466,7 +3480,7 @@ mod tests {
         config.widget_frame = " square ".to_string();
         config.widget_separator = " pipe ".to_string();
 
-        let rendered = render_nova_runtime_plugin_block(&config).unwrap();
+        let rendered = render_nova_runtime_background_plugin_block(&config).unwrap();
 
         assert!(rendered.contains(
             r#"command_cpu_command "/runtime/bin/nova_bar_widget cpu --widget-frame square --widget-separator empty --widget-first false""#
@@ -3493,22 +3507,22 @@ mod tests {
     fn runtime_plugin_rejects_invalid_widget_chrome() {
         let mut config = runtime_bar_config();
         config.widget_frame = "curly".to_string();
-        let frame_error = render_nova_runtime_plugin_block(&config).unwrap_err();
+        let frame_error = render_nova_runtime_background_plugin_block(&config).unwrap_err();
         assert_eq!(frame_error.code(), "invalid_widget_frame");
 
         let mut config = runtime_bar_config();
         config.widget_separator = "comma".to_string();
-        let separator_error = render_nova_runtime_plugin_block(&config).unwrap_err();
+        let separator_error = render_nova_runtime_background_plugin_block(&config).unwrap_err();
         assert_eq!(separator_error.code(), "invalid_widget_separator");
     }
 
     // Defends: light appearance uses a purpose-built status-bar palette rather than dark-mode neon on a pale terminal.
     // Strength: defect=2 behavior=2 resilience=2 cost=1 uniqueness=2 total=9/10
     #[test]
-    fn renders_nova_runtime_plugin_block_with_light_palette() {
+    fn renders_nova_runtime_controller_block_with_light_palette() {
         let mut config = runtime_bar_config();
         config.appearance_mode = "light".to_string();
-        let rendered = render_nova_runtime_plugin_block(&config).unwrap();
+        let rendered = render_nova_runtime_background_plugin_block(&config).unwrap();
 
         assert!(rendered.contains(r#"host_theme_mode "light""#));
         assert!(rendered.contains(r##"host_theme_dark_tab_normal "#[fg=#ffff00] [{index}] ""##));
@@ -3559,7 +3573,7 @@ mod tests {
             (APPEARANCE_MODE_LIGHT, &light_theme),
         ] {
             config.appearance_mode = mode.to_string();
-            let rendered = render_nova_runtime_plugin_block(&config).unwrap();
+            let rendered = render_nova_runtime_background_plugin_block(&config).unwrap();
 
             for (key, value) in active_theme {
                 assert_eq!(runtime_assignment(&rendered, key), escape_kdl_string(value));

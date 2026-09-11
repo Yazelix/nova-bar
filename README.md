@@ -76,6 +76,8 @@ as the bar widens. If tabs alone overflow, zjstatus keeps the active tab visible
 and shortens its name only as a last resort. Nova Bar emits complete `{segment}`
 bodies and `format_right_separator`; zjstatus owns width and click geometry under
 its BAR-WIDTH-001 contract. Standalone presets retain their existing configuration.
+Nova's integrated preset shows compact command placeholders on the first render
+and replaces each one when its result arrives.
 
 ## Optional Command Widgets
 

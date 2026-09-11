@@ -238,12 +238,20 @@ const RUNTIME_CPU_WIDGET_ARGS_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_CPU_WIDGET_
 const RUNTIME_RAM_WIDGET_ARGS_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_RAM_WIDGET_ARGS__";
 const RUNTIME_COMMAND_CLAUDE_USAGE_FORMAT_PLACEHOLDER: &str =
     "__YAZELIX_RUNTIME_COMMAND_CLAUDE_USAGE_FORMAT__";
+const RUNTIME_COMMAND_CLAUDE_USAGE_PLACEHOLDER: &str =
+    "__YAZELIX_RUNTIME_COMMAND_CLAUDE_USAGE_PLACEHOLDER__";
 const RUNTIME_COMMAND_CODEX_USAGE_FORMAT_PLACEHOLDER: &str =
     "__YAZELIX_RUNTIME_COMMAND_CODEX_USAGE_FORMAT__";
+const RUNTIME_COMMAND_CODEX_USAGE_PLACEHOLDER: &str =
+    "__YAZELIX_RUNTIME_COMMAND_CODEX_USAGE_PLACEHOLDER__";
 const RUNTIME_COMMAND_OPENCODE_GO_USAGE_FORMAT_PLACEHOLDER: &str =
     "__YAZELIX_RUNTIME_COMMAND_OPENCODE_GO_USAGE_FORMAT__";
+const RUNTIME_COMMAND_OPENCODE_GO_USAGE_PLACEHOLDER: &str =
+    "__YAZELIX_RUNTIME_COMMAND_OPENCODE_GO_USAGE_PLACEHOLDER__";
 const RUNTIME_COMMAND_CPU_FORMAT_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_COMMAND_CPU_FORMAT__";
+const RUNTIME_COMMAND_CPU_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_COMMAND_CPU_PLACEHOLDER__";
 const RUNTIME_COMMAND_RAM_FORMAT_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_COMMAND_RAM_FORMAT__";
+const RUNTIME_COMMAND_RAM_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_COMMAND_RAM_PLACEHOLDER__";
 const SYSTEM_USAGE_CACHE_SCHEMA_VERSION: u64 = 1;
 const SYSTEM_USAGE_CACHE_MAX_AGE_MILLIS: u64 = 5_000;
 const SYSTEM_USAGE_CACHE_REFRESH_GRACE_MILLIS: u64 = 30_000;
@@ -1177,6 +1185,7 @@ pub fn render_nova_runtime_plugin_block(
         &dark_theme
     };
     let widget_args = || runtime_command_widget_args(chrome);
+    let widget_placeholder = |label| escape_kdl_string(&chrome.frame.frame(label));
     let host_theme_palettes = [
         render_runtime_theme_fields("host_theme_dark_", &dark_theme),
         render_runtime_theme_fields("host_theme_light_", &light_theme),
@@ -1253,21 +1262,35 @@ pub fn render_nova_runtime_plugin_block(
             "{stdout}".to_string(),
         ),
         (
+            RUNTIME_COMMAND_CLAUDE_USAGE_PLACEHOLDER,
+            widget_placeholder("claude …"),
+        ),
+        (
             RUNTIME_COMMAND_CODEX_USAGE_FORMAT_PLACEHOLDER,
             "{stdout}".to_string(),
+        ),
+        (
+            RUNTIME_COMMAND_CODEX_USAGE_PLACEHOLDER,
+            widget_placeholder("codex …"),
         ),
         (
             RUNTIME_COMMAND_OPENCODE_GO_USAGE_FORMAT_PLACEHOLDER,
             "{stdout}".to_string(),
         ),
         (
+            RUNTIME_COMMAND_OPENCODE_GO_USAGE_PLACEHOLDER,
+            widget_placeholder("opencode …"),
+        ),
+        (
             RUNTIME_COMMAND_CPU_FORMAT_PLACEHOLDER,
             "{stdout}".to_string(),
         ),
+        (RUNTIME_COMMAND_CPU_PLACEHOLDER, widget_placeholder("cpu …")),
         (
             RUNTIME_COMMAND_RAM_FORMAT_PLACEHOLDER,
             "{stdout}".to_string(),
         ),
+        (RUNTIME_COMMAND_RAM_PLACEHOLDER, widget_placeholder("ram …")),
     ];
     let mut rendered = NOVA_RUNTIME_BAR_TEMPLATE.to_string();
     for (placeholder, value) in replacements {
@@ -3397,6 +3420,10 @@ mod tests {
         assert!(rendered.contains(r#"command_term_command "/runtime/bin/nova_bar_widget term""#));
         assert!(rendered.contains(r##"command_term_format "{stdout}""##));
         assert!(rendered.contains(r##"command_term_rendermode "raw""##));
+        assert_eq!(
+            runtime_assignment(&rendered, "command_term_placeholder"),
+            " …"
+        );
         assert!(!rendered.contains("command_yazelix_tabs_command"));
         assert!(!rendered.contains("command_workspace_command"));
         assert!(!rendered.contains("command_cursor"));
@@ -3409,9 +3436,25 @@ mod tests {
         );
         assert!(rendered.contains(r##"command_codex_usage_format "{stdout}""##));
         assert!(rendered.contains(r##"command_codex_usage_rendermode "raw""##));
+        assert_eq!(
+            runtime_assignment(&rendered, "command_codex_usage_placeholder"),
+            "codex …"
+        );
+        assert_eq!(
+            runtime_assignment(&rendered, "command_cpu_placeholder"),
+            "cpu …"
+        );
+        assert_eq!(
+            runtime_assignment(&rendered, "command_ram_placeholder"),
+            "ram …"
+        );
         assert!(rendered.contains(
             r#"command_version_command "/runtime/bin/nova_bar_widget version --runtime-dir /runtime""#
         ));
+        assert_eq!(
+            runtime_assignment(&rendered, "command_version_placeholder"),
+            "…"
+        );
         assert!(!rendered.contains(RUNTIME_PLACEHOLDER_PREFIX));
     }
 
@@ -3430,6 +3473,14 @@ mod tests {
         ));
         assert!(rendered.contains(r##"pipe_workspace_format "#[fg=#00ff88,bold][{output}]""##));
         assert!(rendered.contains(r##"command_cpu_format "{stdout}""##));
+        assert_eq!(
+            runtime_assignment(&rendered, "command_codex_usage_placeholder"),
+            "[codex …]"
+        );
+        assert_eq!(
+            runtime_assignment(&rendered, "command_cpu_placeholder"),
+            "[cpu …]"
+        );
         assert_eq!(
             runtime_assignment(&rendered, "format_right"),
             "#[fg=#ff0088,bold][{session}]{segment}#[fg=#00ff88,bold][ hx]{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}"

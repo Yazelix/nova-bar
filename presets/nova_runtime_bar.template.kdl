@@ -22,41 +22,48 @@ __YAZELIX_RUNTIME_HOST_THEME_PALETTES__
 
     command_term_command "__YAZELIX_RUNTIME_WIDGET_BIN__ term"
     command_term_format "{stdout}"
+    command_term_placeholder " …"
     command_term_rendermode "raw"
     command_term_hideonemptystdout "true"
     command_term_interval "3600"
 
     command_claude_usage_command "__YAZELIX_RUNTIME_WIDGET_BIN__ claude --display __YAZELIX_RUNTIME_CLAUDE_USAGE_DISPLAY__ --periods __YAZELIX_RUNTIME_CLAUDE_USAGE_PERIODS____YAZELIX_RUNTIME_CLAUDE_USAGE_WIDGET_ARGS__"
     command_claude_usage_format "__YAZELIX_RUNTIME_COMMAND_CLAUDE_USAGE_FORMAT__"
+    command_claude_usage_placeholder "__YAZELIX_RUNTIME_COMMAND_CLAUDE_USAGE_PLACEHOLDER__"
     command_claude_usage_rendermode "raw"
     command_claude_usage_hideonemptystdout "true"
     command_claude_usage_interval "10"
 
     command_codex_usage_command "__YAZELIX_RUNTIME_WIDGET_BIN__ codex --display __YAZELIX_RUNTIME_CODEX_USAGE_DISPLAY__ --periods __YAZELIX_RUNTIME_CODEX_USAGE_PERIODS____YAZELIX_RUNTIME_CODEX_USAGE_WIDGET_ARGS__"
     command_codex_usage_format "__YAZELIX_RUNTIME_COMMAND_CODEX_USAGE_FORMAT__"
+    command_codex_usage_placeholder "__YAZELIX_RUNTIME_COMMAND_CODEX_USAGE_PLACEHOLDER__"
     command_codex_usage_rendermode "raw"
     command_codex_usage_hideonemptystdout "true"
     command_codex_usage_interval "10"
 
     command_opencode_go_usage_command "__YAZELIX_RUNTIME_WIDGET_BIN__ opencode_go --display __YAZELIX_RUNTIME_OPENCODE_GO_USAGE_DISPLAY__ --periods __YAZELIX_RUNTIME_OPENCODE_GO_USAGE_PERIODS____YAZELIX_RUNTIME_OPENCODE_GO_USAGE_WIDGET_ARGS__"
     command_opencode_go_usage_format "__YAZELIX_RUNTIME_COMMAND_OPENCODE_GO_USAGE_FORMAT__"
+    command_opencode_go_usage_placeholder "__YAZELIX_RUNTIME_COMMAND_OPENCODE_GO_USAGE_PLACEHOLDER__"
     command_opencode_go_usage_rendermode "raw"
     command_opencode_go_usage_hideonemptystdout "true"
     command_opencode_go_usage_interval "10"
 
     command_cpu_command "__YAZELIX_RUNTIME_WIDGET_BIN__ cpu__YAZELIX_RUNTIME_CPU_WIDGET_ARGS__"
     command_cpu_format "__YAZELIX_RUNTIME_COMMAND_CPU_FORMAT__"
+    command_cpu_placeholder "__YAZELIX_RUNTIME_COMMAND_CPU_PLACEHOLDER__"
     command_cpu_rendermode "raw"
     command_cpu_hideonemptystdout "true"
     command_cpu_interval "5"
 
     command_ram_command "__YAZELIX_RUNTIME_WIDGET_BIN__ ram__YAZELIX_RUNTIME_RAM_WIDGET_ARGS__"
     command_ram_format "__YAZELIX_RUNTIME_COMMAND_RAM_FORMAT__"
+    command_ram_placeholder "__YAZELIX_RUNTIME_COMMAND_RAM_PLACEHOLDER__"
     command_ram_rendermode "raw"
     command_ram_hideonemptystdout "true"
     command_ram_interval "5"
 
     command_version_command "__YAZELIX_RUNTIME_WIDGET_BIN__ version --runtime-dir __YAZELIX_RUNTIME_DIR__"
     command_version_format "{stdout}"
+    command_version_placeholder "…"
     command_version_interval "3600"
 }

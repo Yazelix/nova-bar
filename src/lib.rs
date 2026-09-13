@@ -1114,6 +1114,10 @@ fn runtime_theme_fields(
         ),
         ("datetime", format!("{} {{format}} ", style.datetime)),
         (
+            "notification_format_unread",
+            format!("{} {{message}} ", style.tab_active),
+        ),
+        (
             "pipe_workspace_format",
             format!("{}{}", style.workspace, chrome.frame.frame("{output}")),
         ),
@@ -3432,6 +3436,14 @@ mod tests {
         ));
         assert!(rendered.contains(r##"tab_bell_indicator       """##));
         assert!(rendered.contains(r##"pipe_workspace_format "#[fg=#00ff88,bold]{output}""##));
+        assert!(rendered.contains(
+            r##"notification_format_unread "#[bg=#ff6600,fg=#000000,bold] {message} ""##
+        ));
+        assert!(rendered.contains(
+            r##"host_theme_light_notification_format_unread "#[bg=#ccd0da,fg=#303446,bold] {message} ""##
+        ));
+        assert!(rendered.contains(r#"notification_show_interval "5""#));
+        assert!(rendered.contains(r#"notification_toast_min_width "15""#));
         assert!(rendered.contains(r#"command_term_command "/runtime/bin/nova_bar_widget term""#));
         assert!(rendered.contains(r##"command_term_format "{stdout}""##));
         assert!(rendered.contains(r##"command_term_rendermode "raw""##));

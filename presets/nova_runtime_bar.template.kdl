@@ -19,6 +19,8 @@ __YAZELIX_RUNTIME_HOST_THEME_PALETTES__
     tab_flashing_bell_indicator ""
 
     datetime_format "%H:%M %d/%m"
+    notification_show_interval "5"
+    notification_toast_min_width "15"
 
     command_term_command "__YAZELIX_RUNTIME_WIDGET_BIN__ term"
     command_term_format "{stdout}"

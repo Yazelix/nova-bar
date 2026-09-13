@@ -81,7 +81,9 @@ BAR-WIDTH-001 contract.
 Nova's integrated preset shows compact command placeholders on the first render
 and replaces each one when its result arrives. One background zjstatus controller
 owns bar state and command refreshes; each per-tab view displays a targeted frame
-and forwards mouse input.
+and forwards mouse input. The same controller composes transient notifications
+into the originating tab's frame at the top-right corner, using Nova's active
+palette and a five-second deadline without moving tabs or widgets.
 
 ## Optional Command Widgets
 

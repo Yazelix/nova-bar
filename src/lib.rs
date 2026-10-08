@@ -1115,7 +1115,7 @@ fn runtime_theme_fields(
         ("datetime", format!("{} {{format}} ", style.datetime)),
         (
             "notification_format_unread",
-            format!("{} {{message}} ", style.tab_active),
+            format!("{} {{message}} ", style.notification_unread),
         ),
         (
             "pipe_workspace_format",
@@ -3138,19 +3138,19 @@ fn render_tab_label_formats(style: &BarStyle, include_name: bool) -> TabLabelFor
             style.tab_flashing_bell, name
         ),
         tab_active: format!(
-            r##"tab_active   "{} [{{index}}]{} {{floating_indicator}}""##,
+            r##"tab_active   "{} [{{index}}{}] {{floating_indicator}}""##,
             style.tab_active, name
         ),
         tab_active_fullscreen: format!(
-            r##"tab_active_fullscreen "{} [{{index}}]{} {{fullscreen_indicator}}""##,
+            r##"tab_active_fullscreen "{} [{{index}}{}] {{fullscreen_indicator}}""##,
             style.tab_active, name
         ),
         tab_active_sync: format!(
-            r##"tab_active_sync       "{} [{{index}}]{} {{sync_indicator}}""##,
+            r##"tab_active_sync       "{} [{{index}}{}] {{sync_indicator}}""##,
             style.tab_active, name
         ),
         tab_rename: format!(
-            r##"tab_rename    "{} {{index}} {{name}} {{floating_indicator}} ""##,
+            r##"tab_rename    "{} [{{index}} {{name}}] {{floating_indicator}} ""##,
             style.tab_active
         ),
     }
@@ -3429,7 +3429,7 @@ mod tests {
         assert!(!rendered.contains("{mode}"));
         assert_eq!(
             runtime_assignment(&rendered, "tab_normal"),
-            "#[fg=#ffff00] [{index}] "
+            "#[fg=#a0a6af] [{index}] "
         );
         assert!(rendered.contains(
             r##"tab_normal_bell "#[fg=#ff0088,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
@@ -3538,7 +3538,7 @@ mod tests {
         let rendered = render_nova_runtime_background_plugin_block(&config).unwrap();
 
         assert!(rendered.contains(r#"host_theme_mode "light""#));
-        assert!(rendered.contains(r##"host_theme_dark_tab_normal "#[fg=#ffff00] [{index}] ""##));
+        assert!(rendered.contains(r##"host_theme_dark_tab_normal "#[fg=#a0a6af] [{index}] ""##));
         assert_eq!(
             runtime_assignment(&rendered, "format_right"),
             "#[fg=#7c3f97,bold]{session}{segment}#[fg=#2f7d32,bold] hx{segment}{pipe_workspace}{segment}#[fg=#a24f00]{command_cpu}{segment}#[fg=#9a5a00,bold][demo]{segment}#[fg=#1e66f5,bold]{command_version}"
@@ -3546,7 +3546,7 @@ mod tests {
         assert!(!rendered.contains("mode_normal"));
         assert_eq!(
             runtime_assignment(&rendered, "tab_active"),
-            "#[bg=#ccd0da,fg=#303446,bold] [{index}] {floating_indicator}"
+            "#[fg=#9a5a00,bold] [{index}] {floating_indicator}"
         );
         assert!(rendered.contains(
             r##"tab_normal_bell "#[fg=#b4637a,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
@@ -4403,7 +4403,7 @@ esac
         assert_eq!(error.code(), "invalid_widget_tray_entry");
     }
 
-    // Defends: full tab labels keep the existing index plus name format unless compact mode is explicitly enabled.
+    // Full active labels keep their outline and indicators without a background fill.
     // Strength: defect=2 behavior=2 resilience=1 cost=1 uniqueness=2 total=8/10
     #[test]
     fn renders_full_tab_label_formats_by_default_contract() {
@@ -4418,8 +4418,26 @@ esac
                 .tab_normal_flashing_bell
                 .contains("{bell_indicator}")
         );
-        assert!(formats.tab_active.contains("[{index}] {name}"));
-        assert!(formats.tab_rename.contains("{index} {name}"));
+        for appearance in ["dark", "light"] {
+            let formats = render_tab_label_formats(bar_style_for_appearance(appearance), true);
+            for label in [
+                &formats.tab_active,
+                &formats.tab_active_fullscreen,
+                &formats.tab_active_sync,
+                &formats.tab_rename,
+            ] {
+                assert!(label.contains("[{index} {name}]"), "{label}");
+                assert!(!label.contains("bg="), "{label}");
+                assert!(label.contains("bold"), "{label}");
+            }
+            assert!(formats.tab_active.contains("] {floating_indicator}"));
+            assert!(
+                formats
+                    .tab_active_fullscreen
+                    .contains("] {fullscreen_indicator}")
+            );
+            assert!(formats.tab_active_sync.contains("] {sync_indicator}"));
+        }
     }
 
     // Defends: compact tab labels remove tab names from normal rendering while preserving index and state indicators.
@@ -4430,7 +4448,7 @@ esac
 
         assert_eq!(
             formats.tab_normal,
-            r##"tab_normal   "#[fg=#ffff00] [{index}] ""##
+            r##"tab_normal   "#[fg=#a0a6af] [{index}] ""##
         );
         assert!(
             formats

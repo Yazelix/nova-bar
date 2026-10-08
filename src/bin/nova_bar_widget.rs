@@ -635,7 +635,7 @@ mod tests {
         assert!(background.contains(
             "format_right \"#[fg=#00ff88,bold] hx{segment}{pipe_workspace}{segment}#[fg=#ff6600]{command_cpu}{segment}#[fg=#ffff00,bold][demo]{segment}#[fg=#00ccff,bold]{command_version}\""
         ));
-        assert!(background.contains(r##"tab_normal "#[fg=#ffff00] [{index}] ""##));
+        assert!(background.contains(r##"tab_normal "#[fg=#a0a6af] [{index}] ""##));
         assert!(background.contains(
             r##"tab_normal_bell "#[fg=#ff0088,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
         ));

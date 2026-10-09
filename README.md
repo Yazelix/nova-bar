@@ -86,8 +86,9 @@ into the originating tab's frame at the top-right corner, using Nova's active
 palette and a five-second deadline without moving tabs or widgets.
 Full tab labels use `[index name]` in both focus states, keeping text and positions
 steady when focus changes. Active tabs use bold orange on the terminal background;
-ordinary inactive tabs use muted gray. Native layout indicators remain outside
-the outline, and terminal-bell styling remains distinct.
+ordinary inactive tabs use muted gray. Fullscreen and sync indicators remain
+outside the outline, and terminal-bell styling remains distinct. Floating panes
+and popups add no tab indicator in full, compact or rename labels.
 
 ## Optional Command Widgets
 
@@ -223,5 +224,5 @@ If the standalone preset grows beyond zjstatus configuration, the next step is a
 ## LOC scorecard
 
 Counts tracked text files, excluding lockfiles, Beads and binary assets.
-Code/configuration: **5,802** lines; documentation/text: **452** lines.
+Code/configuration: **5,798** lines; documentation/text: **453** lines.
 The full-label check covers both focus states and native indicator formats.

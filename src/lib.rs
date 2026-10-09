@@ -215,7 +215,6 @@ const RUNTIME_ZJSTATUS_PLUGIN_URL_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_ZJSTATU
 const RUNTIME_ACTIVE_THEME_FIELDS_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_ACTIVE_THEME_FIELDS__";
 const RUNTIME_APPEARANCE_MODE_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_APPEARANCE_MODE__";
 const RUNTIME_HOST_THEME_PALETTES_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_HOST_THEME_PALETTES__";
-const RUNTIME_FLOATING_INDICATOR_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_FLOATING_INDICATOR__";
 const RUNTIME_NU_BIN_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_NU_BIN__";
 const RUNTIME_YZX_CONTROL_BIN_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_YZX_CONTROL_BIN__";
 const RUNTIME_WIDGET_BIN_PLACEHOLDER: &str = "__YAZELIX_RUNTIME_WIDGET_BIN__";
@@ -1223,10 +1222,6 @@ fn render_nova_runtime_block(config: &NovaRuntimeBarConfig) -> Result<String, Ba
             escape_kdl_string(appearance_mode),
         ),
         (RUNTIME_HOST_THEME_PALETTES_PLACEHOLDER, host_theme_palettes),
-        (
-            RUNTIME_FLOATING_INDICATOR_PLACEHOLDER,
-            escape_kdl_string("\u{2b1a} "),
-        ),
         (
             RUNTIME_NU_BIN_PLACEHOLDER,
             escape_kdl_string(&config.nu_bin),
@@ -3138,7 +3133,7 @@ fn render_tab_label_formats(style: &BarStyle, include_name: bool) -> TabLabelFor
             style.tab_flashing_bell, name
         ),
         tab_active: format!(
-            r##"tab_active   "{} [{{index}}{}] {{floating_indicator}}""##,
+            r##"tab_active   "{} [{{index}}{}] ""##,
             style.tab_active, name
         ),
         tab_active_fullscreen: format!(
@@ -3150,7 +3145,7 @@ fn render_tab_label_formats(style: &BarStyle, include_name: bool) -> TabLabelFor
             style.tab_active, name
         ),
         tab_rename: format!(
-            r##"tab_rename    "{} [{{index}} {{name}}] {{floating_indicator}} ""##,
+            r##"tab_rename    "{} [{{index}} {{name}}] ""##,
             style.tab_active
         ),
     }
@@ -3546,7 +3541,7 @@ mod tests {
         assert!(!rendered.contains("mode_normal"));
         assert_eq!(
             runtime_assignment(&rendered, "tab_active"),
-            "#[fg=#9a5a00,bold] [{index}] {floating_indicator}"
+            "#[fg=#9a5a00,bold] [{index}] "
         );
         assert!(rendered.contains(
             r##"tab_normal_bell "#[fg=#b4637a,bold] [{index}] {sync_indicator}{fullscreen_indicator}""##
@@ -4438,8 +4433,8 @@ esac
                 assert!(label.contains("[{index} {name}]"), "{label}");
                 assert!(!label.contains("bg="), "{label}");
                 assert!(label.contains("bold"), "{label}");
+                assert!(!label.contains("{floating_indicator}"), "{label}");
             }
-            assert!(formats.tab_active.contains("] {floating_indicator}"));
             assert!(
                 formats
                     .tab_active_fullscreen
@@ -4470,6 +4465,8 @@ esac
         assert!(formats.tab_active_sync.contains("{sync_indicator}"));
         assert!(!formats.tab_active.contains("{name}"));
         assert!(formats.tab_rename.contains("{name}"));
+        assert!(!formats.tab_active.contains("{floating_indicator}"));
+        assert!(!formats.tab_rename.contains("{floating_indicator}"));
     }
 
     // Regression: unsupported tab label modes fail fast instead of emitting broken zjstatus KDL.

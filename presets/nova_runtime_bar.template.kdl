@@ -14,7 +14,6 @@ __YAZELIX_RUNTIME_HOST_THEME_PALETTES__
     tab_separator ""
     tab_sync_indicator       "<> "
     tab_fullscreen_indicator "[] "
-    tab_floating_indicator   "__YAZELIX_RUNTIME_FLOATING_INDICATOR__"
     tab_bell_indicator       ""
     tab_flashing_bell_indicator ""
 

@@ -84,9 +84,10 @@ owns bar state and command refreshes; each per-tab view displays a targeted fram
 and forwards mouse input. The same controller composes transient notifications
 into the originating tab's frame at the top-right corner, using Nova's active
 palette and a five-second deadline without moving tabs or widgets.
-Active tabs use a bold orange `[index name]` outline on the terminal background;
+Full tab labels use `[index name]` in both focus states, keeping text and positions
+steady when focus changes. Active tabs use bold orange on the terminal background;
 ordinary inactive tabs use muted gray. Native layout indicators remain outside
-the active outline, and terminal-bell styling remains distinct.
+the outline, and terminal-bell styling remains distinct.
 
 ## Optional Command Widgets
 
@@ -218,3 +219,9 @@ cargo test
 ```
 
 If the standalone preset grows beyond zjstatus configuration, the next step is a real plugin decision rather than forking zjstatus by default.
+
+## LOC scorecard
+
+Counts tracked text files, excluding lockfiles, Beads and binary assets.
+Code/configuration: **5,802** lines; documentation/text: **452** lines.
+The full-label check covers both focus states and native indicator formats.

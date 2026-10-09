@@ -3118,23 +3118,23 @@ fn render_tab_label_formats(style: &BarStyle, include_name: bool) -> TabLabelFor
     let name = if include_name { " {name}" } else { "" };
     TabLabelFormats {
         tab_normal: format!(
-            r##"tab_normal   "{} [{{index}}]{} ""##,
+            r##"tab_normal   "{} [{{index}}{}] ""##,
             style.tab_normal, name
         ),
         tab_normal_fullscreen: format!(
-            r##"tab_normal_fullscreen "{} [{{index}}]{} [] ""##,
+            r##"tab_normal_fullscreen "{} [{{index}}{}] [] ""##,
             style.tab_normal, name
         ),
         tab_normal_sync: format!(
-            r##"tab_normal_sync       "{} [{{index}}]{} <> ""##,
+            r##"tab_normal_sync       "{} [{{index}}{}] <> ""##,
             style.tab_normal, name
         ),
         tab_normal_bell: format!(
-            r##"tab_normal_bell "{} [{{index}}]{} {{sync_indicator}}{{fullscreen_indicator}}""##,
+            r##"tab_normal_bell "{} [{{index}}{}] {{sync_indicator}}{{fullscreen_indicator}}""##,
             style.tab_bell, name
         ),
         tab_normal_flashing_bell: format!(
-            r##"tab_normal_flashing_bell "{} [{{index}}]{} {{sync_indicator}}{{fullscreen_indicator}}""##,
+            r##"tab_normal_flashing_bell "{} [{{index}}{}] {{sync_indicator}}{{fullscreen_indicator}}""##,
             style.tab_flashing_bell, name
         ),
         tab_active: format!(
@@ -3876,6 +3876,8 @@ esac
 "#,
         );
         let cache_path = temp.join("agent_usage").join("codex_usage_cache_v4.json");
+        // Allow build-load jitter here; the next test checks the timeout budget.
+        let timeout = std::time::Duration::from_secs(5);
 
         let text = codex_usage_widget_text(CodexUsageWidgetOptions {
             cache_path: &cache_path,
@@ -3883,7 +3885,7 @@ esac
             now_unix_seconds: 1_000,
             max_age_seconds: 60,
             error_backoff_seconds: 120,
-            timeout: std::time::Duration::from_secs(1),
+            timeout,
             display: AgentUsageDisplay::Quota,
             periods: &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
         })
@@ -3924,7 +3926,7 @@ esac
             now_unix_seconds: 1_060,
             max_age_seconds: 60,
             error_backoff_seconds: 120,
-            timeout: std::time::Duration::from_secs(1),
+            timeout,
             display: AgentUsageDisplay::Quota,
             periods: &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
         })
@@ -4403,15 +4405,13 @@ esac
         assert_eq!(error.code(), "invalid_widget_tray_entry");
     }
 
-    // Full active labels keep their outline and indicators without a background fill.
+    // Full labels keep the same outline when focus changes; native indicators remain separate.
     // Strength: defect=2 behavior=2 resilience=1 cost=1 uniqueness=2 total=8/10
     #[test]
     fn renders_full_tab_label_formats_by_default_contract() {
         let formats = render_zjstatus_tab_label_formats(TAB_LABEL_MODE_FULL).unwrap();
 
-        assert!(formats.tab_normal.contains("[{index}] {name}"));
         assert!(!formats.tab_normal.contains("{bell_indicator}"));
-        assert!(formats.tab_normal_bell.contains("[{index}] {name}"));
         assert!(!formats.tab_normal_bell.contains("{bell_indicator}"));
         assert!(
             !formats
@@ -4420,6 +4420,15 @@ esac
         );
         for appearance in ["dark", "light"] {
             let formats = render_tab_label_formats(bar_style_for_appearance(appearance), true);
+            for label in [
+                &formats.tab_normal,
+                &formats.tab_normal_fullscreen,
+                &formats.tab_normal_sync,
+                &formats.tab_normal_bell,
+                &formats.tab_normal_flashing_bell,
+            ] {
+                assert!(label.contains("[{index} {name}]"), "{label}");
+            }
             for label in [
                 &formats.tab_active,
                 &formats.tab_active_fullscreen,

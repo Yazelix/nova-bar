@@ -2865,8 +2865,8 @@ fn render_agent_usage_status_body(label: &str, summary: &str) -> String {
         String::new()
     } else {
         let label = match label {
-            "codex" => "\u{ec81}",
-            "claude" => "C",
+            "codex" => "\u{ec81} codex",
+            "claude" => "C claude",
             _ => label,
         };
         format!("{label} {summary}")
@@ -3452,7 +3452,7 @@ mod tests {
         assert!(rendered.contains(r##"command_codex_usage_rendermode "raw""##));
         assert_eq!(
             runtime_assignment(&rendered, "command_codex_usage_placeholder"),
-            "\u{ec81} …"
+            "\u{ec81} codex …"
         );
         assert_eq!(
             runtime_assignment(&rendered, "command_cpu_placeholder"),
@@ -3489,7 +3489,7 @@ mod tests {
         assert!(rendered.contains(r##"command_cpu_format "{stdout}""##));
         assert_eq!(
             runtime_assignment(&rendered, "command_codex_usage_placeholder"),
-            "[\u{ec81} …]"
+            "[\u{ec81} codex …]"
         );
         assert_eq!(
             runtime_assignment(&rendered, "command_cpu_placeholder"),
@@ -3801,15 +3801,15 @@ MemAvailable:   250000 kB
 
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Quota),
-            " [\u{ec81} 30m/5h|88% 0h/7d|100%]"
+            " [\u{ec81} codex 30m/5h|88% 0h/7d|100%]"
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Token),
-            " [\u{ec81} 30m/5h|1.23M 0h/7d|345M]"
+            " [\u{ec81} codex 30m/5h|1.23M 0h/7d|345M]"
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Both),
-            " [\u{ec81} 30m/5h|1.23M|88% 0h/7d|345M|100%]"
+            " [\u{ec81} codex 30m/5h|1.23M|88% 0h/7d|345M|100%]"
         );
     }
 
@@ -3828,7 +3828,7 @@ MemAvailable:   250000 kB
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Both),
-            " [\u{ec81} 5h|42k]"
+            " [\u{ec81} codex 5h|42k]"
         );
         assert_eq!(
             render_codex_usage_status_widget(
@@ -3878,7 +3878,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [\u{ec81} 3h/5h|49% 4d/7d|80%]");
+        assert_eq!(text, " [\u{ec81} codex 3h/5h|49% 4d/7d|80%]");
         assert_eq!(
             read_codex_usage_shared_cache_value(&cache_path)
                 .unwrap()
@@ -3919,7 +3919,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [\u{ec81} 0h/7d|99%]");
+        assert_eq!(text, " [\u{ec81} codex 0h/7d|99%]");
         let cache = read_codex_usage_shared_cache_value(&cache_path).unwrap();
         assert_eq!(
             cache
@@ -3992,14 +3992,14 @@ fi
         let text = render(1_000);
 
         assert!(started.elapsed() < std::time::Duration::from_secs(3));
-        assert_eq!(text, " [\u{ec81} 5h|138M 4d/7d|1.34B|80%]");
+        assert_eq!(text, " [\u{ec81} codex 5h|138M 4d/7d|1.34B|80%]");
         assert_eq!(
             render_codex_usage_widget_body_from_cache(
                 &cache_path,
                 AgentUsageDisplay::Both,
                 &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
             ),
-            "\u{ec81} 5h|138M 4d/7d|1.34B|80%"
+            "\u{ec81} codex 5h|138M 4d/7d|1.34B|80%"
         );
         let cache = read_codex_usage_shared_cache_value(&cache_path).unwrap();
         let entry = &cache["codex"];
@@ -4138,7 +4138,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [C 5h|15.5M|49% wk|66.6M|80%]");
+        assert_eq!(text, " [C claude 5h|15.5M|49% wk|66.6M|80%]");
         assert_eq!(
             read_claude_usage_shared_cache_value(&cache_path)
                 .unwrap()
@@ -4216,7 +4216,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Both
             ),
-            " [C 5h|15.5M|49% wk|66.6M|80%]"
+            " [C claude 5h|15.5M|49% wk|66.6M|80%]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4225,7 +4225,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Token
             ),
-            " [C 5h|15.5M wk|66.6M]"
+            " [C claude 5h|15.5M wk|66.6M]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4234,7 +4234,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Quota
             ),
-            " [C 5h|49% wk|80%]"
+            " [C claude 5h|49% wk|80%]"
         );
     }
 

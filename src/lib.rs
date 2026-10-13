@@ -641,13 +641,10 @@ pub fn render_codex_usage_widget_from_cache(
     read_codex_usage_shared_cache_value(path)
         .and_then(|cache| cache.get("codex").cloned())
         .map(|entry| {
-            render_agent_usage_status_widget(
-                codex_cache_status_label(&entry),
-                &render_codex_usage_summary_for_periods(
-                    &windowed_usage_facts_from_cache_entry(&entry),
-                    display,
-                    periods,
-                ),
+            render_codex_usage_status_widget_for_periods(
+                &windowed_usage_facts_from_cache_entry(&entry),
+                display,
+                periods,
             )
         })
         .unwrap_or_default()
@@ -661,23 +658,13 @@ pub fn render_codex_usage_widget_body_from_cache(
     read_codex_usage_shared_cache_value(path)
         .and_then(|cache| cache.get("codex").cloned())
         .map(|entry| {
-            render_agent_usage_status_body(
-                codex_cache_status_label(&entry),
-                &render_codex_usage_summary_for_periods(
-                    &windowed_usage_facts_from_cache_entry(&entry),
-                    display,
-                    periods,
-                ),
+            render_codex_usage_status_body_for_periods(
+                &windowed_usage_facts_from_cache_entry(&entry),
+                display,
+                periods,
             )
         })
         .unwrap_or_default()
-}
-
-fn codex_cache_status_label(entry: &serde_json::Value) -> &'static str {
-    match entry.get("status").and_then(serde_json::Value::as_str) {
-        Some("ok") => "codex",
-        _ => "codex~",
-    }
 }
 
 pub fn read_codex_usage_shared_cache_value(path: &std::path::Path) -> Option<serde_json::Value> {
@@ -4000,7 +3987,15 @@ fi
         let text = render(1_000);
 
         assert!(started.elapsed() < std::time::Duration::from_secs(3));
-        assert_eq!(text, " [codex~ 5h|138M 4d/7d|1.34B|80%]");
+        assert_eq!(text, " [codex 5h|138M 4d/7d|1.34B|80%]");
+        assert_eq!(
+            render_codex_usage_widget_body_from_cache(
+                &cache_path,
+                AgentUsageDisplay::Both,
+                &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
+            ),
+            "codex 5h|138M 4d/7d|1.34B|80%"
+        );
         let cache = read_codex_usage_shared_cache_value(&cache_path).unwrap();
         let entry = &cache["codex"];
         assert_eq!(entry["status"].as_str(), Some("partial"));

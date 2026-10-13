@@ -154,7 +154,7 @@ Replace the `zjstatus.wasm` path with the installed package path. If you install
 
 Provider widgets maintain their own cache, lock, freshness, and error-backoff files under `$XDG_CACHE_HOME/nova_bar` or `$HOME/.cache/nova_bar`. CPU/RAM share one short-lived system-usage cache so command-widget bursts do not resample system metrics in every process. Use `--cache` only when overriding the default. Nova may omit it because the full runtime exports `YAZELIX_STATUS_BAR_CACHE_PATH`.
 
-Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh waits two minutes; retained values use the `codex~` label until a refresh succeeds. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. The label stays `codex`; refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
 
 ## Standalone Fact Renderers
 
@@ -224,5 +224,5 @@ If the standalone preset grows beyond zjstatus configuration, the next step is a
 ## LOC scorecard
 
 Counts tracked text files, excluding lockfiles, Beads and binary assets.
-Code/configuration: **5,798** lines; documentation/text: **453** lines.
+Code/configuration: **5,793** lines; documentation/text: **453** lines.
 The full-label check covers both focus states and native indicator formats.

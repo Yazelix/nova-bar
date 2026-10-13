@@ -1263,7 +1263,7 @@ fn render_nova_runtime_block(config: &NovaRuntimeBarConfig) -> Result<String, Ba
         ),
         (
             RUNTIME_COMMAND_CLAUDE_USAGE_PLACEHOLDER,
-            widget_placeholder("claude …"),
+            widget_placeholder(&render_agent_usage_status_body("claude", "…")),
         ),
         (
             RUNTIME_COMMAND_CODEX_USAGE_FORMAT_PLACEHOLDER,
@@ -1271,7 +1271,7 @@ fn render_nova_runtime_block(config: &NovaRuntimeBarConfig) -> Result<String, Ba
         ),
         (
             RUNTIME_COMMAND_CODEX_USAGE_PLACEHOLDER,
-            widget_placeholder("codex …"),
+            widget_placeholder(&render_agent_usage_status_body("codex", "…")),
         ),
         (
             RUNTIME_COMMAND_OPENCODE_GO_USAGE_FORMAT_PLACEHOLDER,
@@ -2864,6 +2864,11 @@ fn render_agent_usage_status_body(label: &str, summary: &str) -> String {
     if summary.is_empty() {
         String::new()
     } else {
+        let label = match label {
+            "codex" => "\u{ec81}",
+            "claude" => "C",
+            _ => label,
+        };
         format!("{label} {summary}")
     }
 }
@@ -3159,7 +3164,7 @@ fn render_widget_with_style(
         WIDGET_TERM => Ok(command(style.widget, COMMAND_TERM)),
         WIDGET_WORKSPACE => Ok(PIPE_WORKSPACE.to_string()),
         WIDGET_CLAUDE_USAGE => Ok(command(style.usage, COMMAND_CLAUDE_USAGE)),
-        WIDGET_CODEX_USAGE => Ok(command(style.usage, COMMAND_CODEX_USAGE)),
+        WIDGET_CODEX_USAGE => Ok(command(style.codex_usage, COMMAND_CODEX_USAGE)),
         WIDGET_OPENCODE_GO_USAGE => Ok(command(style.usage, COMMAND_OPENCODE_GO_USAGE)),
         WIDGET_CPU => Ok(command(style.system_usage, COMMAND_CPU)),
         WIDGET_RAM => Ok(command(style.system_usage, COMMAND_RAM)),
@@ -3267,7 +3272,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            " #[fg=#ff0088,bold]{session} #[fg=#6c7086,bold]• #[fg=#00ff88,bold] hx #[fg=#6c7086,bold]• #[fg=#00ff88,bold]❯nu #[fg=#6c7086,bold]• #[fg=#00ff88,bold]{command_term} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_cpu} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_ram}"
+            " #[fg=#ff0088,bold]{session} #[fg=#6c7086,bold]• #[fg=#00ff88,bold] hx #[fg=#6c7086,bold]• #[fg=#00ff88,bold]❯nu #[fg=#6c7086,bold]• #[fg=#00ff88,bold]{command_term} #[fg=#6c7086,bold]• #[fg=#ffffff]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_cpu} #[fg=#6c7086,bold]• #[fg=#ff6600]{command_ram}"
         );
     }
 
@@ -3340,7 +3345,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            " #[fg=#bb88ff,bold]{command_claude_usage} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_opencode_go_usage}"
+            " #[fg=#bb88ff,bold]{command_claude_usage} #[fg=#6c7086,bold]• #[fg=#ffffff]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_opencode_go_usage}"
         );
     }
 
@@ -3447,7 +3452,7 @@ mod tests {
         assert!(rendered.contains(r##"command_codex_usage_rendermode "raw""##));
         assert_eq!(
             runtime_assignment(&rendered, "command_codex_usage_placeholder"),
-            "codex …"
+            "\u{ec81} …"
         );
         assert_eq!(
             runtime_assignment(&rendered, "command_cpu_placeholder"),
@@ -3484,7 +3489,7 @@ mod tests {
         assert!(rendered.contains(r##"command_cpu_format "{stdout}""##));
         assert_eq!(
             runtime_assignment(&rendered, "command_codex_usage_placeholder"),
-            "[codex …]"
+            "[\u{ec81} …]"
         );
         assert_eq!(
             runtime_assignment(&rendered, "command_cpu_placeholder"),
@@ -3796,15 +3801,15 @@ MemAvailable:   250000 kB
 
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Quota),
-            " [codex 30m/5h|88% 0h/7d|100%]"
+            " [\u{ec81} 30m/5h|88% 0h/7d|100%]"
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Token),
-            " [codex 30m/5h|1.23M 0h/7d|345M]"
+            " [\u{ec81} 30m/5h|1.23M 0h/7d|345M]"
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Both),
-            " [codex 30m/5h|1.23M|88% 0h/7d|345M|100%]"
+            " [\u{ec81} 30m/5h|1.23M|88% 0h/7d|345M|100%]"
         );
     }
 
@@ -3823,7 +3828,7 @@ MemAvailable:   250000 kB
         );
         assert_eq!(
             render_codex_usage_status_widget(&facts, AgentUsageDisplay::Both),
-            " [codex 5h|42k]"
+            " [\u{ec81} 5h|42k]"
         );
         assert_eq!(
             render_codex_usage_status_widget(
@@ -3873,7 +3878,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [codex 3h/5h|49% 4d/7d|80%]");
+        assert_eq!(text, " [\u{ec81} 3h/5h|49% 4d/7d|80%]");
         assert_eq!(
             read_codex_usage_shared_cache_value(&cache_path)
                 .unwrap()
@@ -3914,7 +3919,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [codex 0h/7d|99%]");
+        assert_eq!(text, " [\u{ec81} 0h/7d|99%]");
         let cache = read_codex_usage_shared_cache_value(&cache_path).unwrap();
         assert_eq!(
             cache
@@ -3987,14 +3992,14 @@ fi
         let text = render(1_000);
 
         assert!(started.elapsed() < std::time::Duration::from_secs(3));
-        assert_eq!(text, " [codex 5h|138M 4d/7d|1.34B|80%]");
+        assert_eq!(text, " [\u{ec81} 5h|138M 4d/7d|1.34B|80%]");
         assert_eq!(
             render_codex_usage_widget_body_from_cache(
                 &cache_path,
                 AgentUsageDisplay::Both,
                 &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
             ),
-            "codex 5h|138M 4d/7d|1.34B|80%"
+            "\u{ec81} 5h|138M 4d/7d|1.34B|80%"
         );
         let cache = read_codex_usage_shared_cache_value(&cache_path).unwrap();
         let entry = &cache["codex"];
@@ -4133,7 +4138,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [claude 5h|15.5M|49% wk|66.6M|80%]");
+        assert_eq!(text, " [C 5h|15.5M|49% wk|66.6M|80%]");
         assert_eq!(
             read_claude_usage_shared_cache_value(&cache_path)
                 .unwrap()
@@ -4211,7 +4216,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Both
             ),
-            " [claude 5h|15.5M|49% wk|66.6M|80%]"
+            " [C 5h|15.5M|49% wk|66.6M|80%]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4220,7 +4225,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Token
             ),
-            " [claude 5h|15.5M wk|66.6M]"
+            " [C 5h|15.5M wk|66.6M]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4229,7 +4234,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Quota
             ),
-            " [claude 5h|49% wk|80%]"
+            " [C 5h|49% wk|80%]"
         );
     }
 

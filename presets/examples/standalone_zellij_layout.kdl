@@ -42,7 +42,7 @@ layout {
             command_claude_usage_interval "10"
 
             command_codex_usage_command "nova_bar_widget codex"
-            command_codex_usage_format "#[fg=#bb88ff,bold]{stdout}"
+            command_codex_usage_format "#[fg=#ffffff]{stdout}"
             command_codex_usage_interval "10"
 
             command_opencode_go_usage_command "nova_bar_widget opencode_go"

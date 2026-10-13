@@ -130,7 +130,7 @@ layout {
             command_claude_usage_interval "10"
 
             command_codex_usage_command "nova_bar_widget codex"
-            command_codex_usage_format "#[fg=#bb88ff,bold]{stdout}"
+            command_codex_usage_format "#[fg=#ffffff]{stdout}"
             command_codex_usage_interval "10"
 
             command_opencode_go_usage_command "nova_bar_widget opencode_go"
@@ -154,7 +154,12 @@ Replace the `zjstatus.wasm` path with the installed package path. If you install
 
 Provider widgets maintain their own cache, lock, freshness, and error-backoff files under `$XDG_CACHE_HOME/nova_bar` or `$HOME/.cache/nova_bar`. CPU/RAM share one short-lived system-usage cache so command-widget bursts do not resample system metrics in every process. Use `--cache` only when overriding the default. Nova may omit it because the full runtime exports `YAZELIX_STATUS_BAR_CACHE_PATH`.
 
-Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. The label stays `codex`; refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses the OpenAI blossom; Claude uses a plain `C`, matching Eon. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+
+The Codex glyph requires Symbols Nerd Font 3.5 or newer (U+EC81). Nova packages
+that font for Rio; other terminals must supply it. The OpenAI mark identifies the
+Codex service, remains OpenAI's property, and is rendered monochrome by the
+integrated dark and light presets.
 
 ## Standalone Fact Renderers
 
@@ -224,5 +229,7 @@ If the standalone preset grows beyond zjstatus configuration, the next step is a
 ## LOC scorecard
 
 Counts tracked text files, excluding lockfiles, Beads and binary assets.
-Code/configuration: **5,793** lines; documentation/text: **453** lines.
+Code/configuration: **5,801** lines; documentation/text: **460** lines.
 The full-label check covers both focus states and native indicator formats.
+Provider symbols and initial placeholders share the existing body formatter;
+Codex's monochrome palette preserves its mark in dark and light modes.

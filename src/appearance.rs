@@ -27,13 +27,6 @@ pub(crate) fn runtime_bar_appearance(raw: &str) -> &'static str {
     }
 }
 
-pub(crate) fn bar_style_for_appearance(raw: &str) -> &'static BarStyle {
-    match runtime_bar_appearance(raw) {
-        APPEARANCE_MODE_LIGHT => &LIGHT_BAR_STYLE,
-        _ => &DARK_BAR_STYLE,
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct BarStyle {
     pub(crate) session: &'static str,
@@ -41,7 +34,6 @@ pub(crate) struct BarStyle {
     pub(crate) custom_text: &'static str,
     pub(crate) separator: &'static str,
     pub(crate) brand: &'static str,
-    pub(crate) mode_scroll: &'static str,
     pub(crate) tab_normal: &'static str,
     pub(crate) tab_bell: &'static str,
     pub(crate) tab_flashing_bell: &'static str,
@@ -61,7 +53,6 @@ pub(crate) const DARK_BAR_STYLE: BarStyle = BarStyle {
     custom_text: "#[fg=#ffff00,bold]",
     separator: "#[fg=#6c7086,bold]",
     brand: "#[fg=#00ccff,bold]",
-    mode_scroll: "#[bg=#ff0088,fg=#ffffff,bold]",
     tab_normal: "#[fg=#a0a6af]",
     tab_bell: "#[fg=#ff0088,bold]",
     tab_flashing_bell: "#[bg=#ff0088,fg=#ffffff,bold]",
@@ -81,7 +72,6 @@ pub(crate) const LIGHT_BAR_STYLE: BarStyle = BarStyle {
     custom_text: "#[fg=#9a5a00,bold]",
     separator: "#[fg=#8c8fa1,bold]",
     brand: "#[fg=#1e66f5,bold]",
-    mode_scroll: "#[bg=#ead4ec,fg=#6d3f73,bold]",
     tab_normal: "#[fg=#5c5f77]",
     tab_bell: "#[fg=#b4637a,bold]",
     tab_flashing_bell: "#[bg=#b4637a,fg=#fffaf3,bold]",

@@ -4,9 +4,7 @@ pub use appearance::{
     APPEARANCE_MODE_AUTO, APPEARANCE_MODE_DARK, APPEARANCE_MODE_LIGHT, default_appearance_mode,
     normalize_appearance_arg,
 };
-use appearance::{
-    BarStyle, DARK_BAR_STYLE, LIGHT_BAR_STYLE, bar_style_for_appearance, runtime_bar_appearance,
-};
+use appearance::{BarStyle, DARK_BAR_STYLE, LIGHT_BAR_STYLE, runtime_bar_appearance};
 use serde::{Deserialize, Serialize};
 
 pub const WIDGET_EDITOR: &str = "editor";
@@ -4413,8 +4411,8 @@ esac
                 .tab_normal_flashing_bell
                 .contains("{bell_indicator}")
         );
-        for appearance in ["dark", "light"] {
-            let formats = render_tab_label_formats(bar_style_for_appearance(appearance), true);
+        for style in [&DARK_BAR_STYLE, &LIGHT_BAR_STYLE] {
+            let formats = render_tab_label_formats(style, true);
             for label in [
                 &formats.tab_normal,
                 &formats.tab_normal_fullscreen,

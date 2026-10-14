@@ -229,7 +229,7 @@ If the standalone preset grows beyond zjstatus configuration, the next step is a
 ## LOC scorecard
 
 Counts tracked text files, excluding lockfiles, Beads and binary assets.
-Code/configuration: **5,801** lines; documentation/text: **460** lines.
+Code/configuration: **5,789** lines; documentation/text: **460** lines.
 The full-label check covers both focus states and native indicator formats.
 Provider symbols and initial placeholders share the existing body formatter;
 Codex's monochrome palette preserves its mark in dark and light modes.

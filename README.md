@@ -154,7 +154,7 @@ Replace the `zjstatus.wasm` path with the installed package path. If you install
 
 Provider widgets maintain their own cache, lock, freshness, and error-backoff files under `$XDG_CACHE_HOME/nova_bar` or `$HOME/.cache/nova_bar`. CPU/RAM share one short-lived system-usage cache so command-widget bursts do not resample system metrics in every process. Use `--cache` only when overriding the default. Nova may omit it because the full runtime exports `YAZELIX_STATUS_BAR_CACHE_PATH`.
 
-Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses the OpenAI blossom; Claude uses a plain `C`, matching Eon. Provider names remain beside the symbols. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses only the OpenAI blossom; Claude uses only a plain `C`, matching Eon. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
 
 The Codex glyph requires Symbols Nerd Font 3.5 or newer (U+EC81). Nova packages
 that font for Rio; other terminals must supply it. The OpenAI mark identifies the
@@ -232,4 +232,4 @@ Counts tracked text files, excluding lockfiles, Beads and binary assets.
 Code/configuration: **5,789** lines; documentation/text: **460** lines.
 The full-label check covers both focus states and native indicator formats.
 Provider symbols and initial placeholders share the existing body formatter;
-Codex's monochrome palette preserves its mark in dark and light modes.
+Codex's monochrome palette keeps icon-only provider output legible in both modes.

@@ -156,8 +156,8 @@ Provider widgets maintain their own cache, lock, freshness, and error-backoff fi
 
 Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses only the OpenAI blossom; Claude uses only a plain `C`, matching Eon. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
 
-The Codex glyph requires Symbols Nerd Font 3.5 or newer (U+EC81). Nova packages
-that font for Rio; other terminals must supply it. The OpenAI mark identifies the
+The Codex glyph requires Nerd Fonts 3.5 or newer (U+EC81). Nova uses JetBrains
+Mono's patched symbol face for Rio; other terminals need glyph coverage. The mark identifies the
 Codex service, remains OpenAI's property, and is rendered monochrome by the
 integrated dark and light presets.
 

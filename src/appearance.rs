@@ -43,6 +43,7 @@ pub(crate) struct BarStyle {
     pub(crate) datetime: &'static str,
     pub(crate) workspace: &'static str,
     pub(crate) usage: &'static str,
+    pub(crate) claude_usage: &'static str,
     pub(crate) codex_usage: &'static str,
     pub(crate) system_usage: &'static str,
 }
@@ -62,6 +63,7 @@ pub(crate) const DARK_BAR_STYLE: BarStyle = BarStyle {
     datetime: "#[fg=#bb88ff,bold]",
     workspace: "#[fg=#00ff88,bold]",
     usage: "#[fg=#bb88ff,bold]",
+    claude_usage: "#[fg=#d97757]",
     codex_usage: "#[fg=#ffffff]",
     system_usage: "#[fg=#ff6600]",
 };
@@ -81,6 +83,7 @@ pub(crate) const LIGHT_BAR_STYLE: BarStyle = BarStyle {
     datetime: "#[fg=#7850a8,bold]",
     workspace: "#[fg=#2f7d32,bold]",
     usage: "#[fg=#7850a8,bold]",
+    claude_usage: "#[fg=#d97757]",
     codex_usage: "#[fg=#000000]",
     system_usage: "#[fg=#a24f00]",
 };

@@ -38,7 +38,7 @@ layout {
             datetime_format "%H:%M %d/%m"
 
             command_claude_usage_command "nova_bar_widget claude"
-            command_claude_usage_format "#[fg=#bb88ff,bold]{stdout}"
+            command_claude_usage_format "#[fg=#d97757]{stdout}"
             command_claude_usage_interval "10"
 
             command_codex_usage_command "nova_bar_widget codex"

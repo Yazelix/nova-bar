@@ -2864,7 +2864,7 @@ fn render_agent_usage_status_body(label: &str, summary: &str) -> String {
     } else {
         let label = match label {
             "codex" => "\u{ec81}",
-            "claude" => "C",
+            "claude" => "\u{ec82}",
             _ => label,
         };
         format!("{label} {summary}")
@@ -3161,7 +3161,7 @@ fn render_widget_with_style(
         WIDGET_SHELL => Ok(inline(style.widget, format!("❯{}", request.shell_label))),
         WIDGET_TERM => Ok(command(style.widget, COMMAND_TERM)),
         WIDGET_WORKSPACE => Ok(PIPE_WORKSPACE.to_string()),
-        WIDGET_CLAUDE_USAGE => Ok(command(style.usage, COMMAND_CLAUDE_USAGE)),
+        WIDGET_CLAUDE_USAGE => Ok(command(style.claude_usage, COMMAND_CLAUDE_USAGE)),
         WIDGET_CODEX_USAGE => Ok(command(style.codex_usage, COMMAND_CODEX_USAGE)),
         WIDGET_OPENCODE_GO_USAGE => Ok(command(style.usage, COMMAND_OPENCODE_GO_USAGE)),
         WIDGET_CPU => Ok(command(style.system_usage, COMMAND_CPU)),
@@ -3343,7 +3343,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            " #[fg=#bb88ff,bold]{command_claude_usage} #[fg=#6c7086,bold]• #[fg=#ffffff]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_opencode_go_usage}"
+            " #[fg=#d97757]{command_claude_usage} #[fg=#6c7086,bold]• #[fg=#ffffff]{command_codex_usage} #[fg=#6c7086,bold]• #[fg=#bb88ff,bold]{command_opencode_go_usage}"
         );
     }
 
@@ -4136,7 +4136,7 @@ esac
         })
         .unwrap();
 
-        assert_eq!(text, " [C 5h|15.5M|49% wk|66.6M|80%]");
+        assert_eq!(text, " [\u{ec82} 5h|15.5M|49% wk|66.6M|80%]");
         assert_eq!(
             read_claude_usage_shared_cache_value(&cache_path)
                 .unwrap()
@@ -4214,7 +4214,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Both
             ),
-            " [C 5h|15.5M|49% wk|66.6M|80%]"
+            " [\u{ec82} 5h|15.5M|49% wk|66.6M|80%]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4223,7 +4223,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Token
             ),
-            " [C 5h|15.5M wk|66.6M]"
+            " [\u{ec82} 5h|15.5M wk|66.6M]"
         );
         assert_eq!(
             render_windowed_agent_usage_status_widget(
@@ -4232,7 +4232,7 @@ esac
                 &periods,
                 AgentUsageDisplay::Quota
             ),
-            " [C 5h|49% wk|80%]"
+            " [\u{ec82} 5h|49% wk|80%]"
         );
     }
 

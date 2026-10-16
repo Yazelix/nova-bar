@@ -8,7 +8,7 @@ format_right "#[fg=#ff0088,bold]{session}{pipe_workspace}{command_claude_usage}{
 pipe_workspace_format "#[fg=#00ff88,bold]{output}"
 
 command_claude_usage_command "nova_bar_widget claude --display both"
-command_claude_usage_format "#[fg=#bb88ff,bold]{stdout}"
+command_claude_usage_format "#[fg=#d97757]{stdout}"
 command_claude_usage_interval "10"
 
 command_codex_usage_command "nova_bar_widget codex --display quota"

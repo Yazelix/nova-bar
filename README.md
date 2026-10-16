@@ -126,7 +126,7 @@ layout {
             format_right "#[fg=#ff0088,bold]{session}{command_claude_usage}{command_codex_usage}{command_opencode_go_usage}{command_cpu}{command_ram} #[fg=#00ccff,bold]nova bar "
 
             command_claude_usage_command "nova_bar_widget claude"
-            command_claude_usage_format "#[fg=#bb88ff,bold]{stdout}"
+            command_claude_usage_format "#[fg=#d97757]{stdout}"
             command_claude_usage_interval "10"
 
             command_codex_usage_command "nova_bar_widget codex"
@@ -154,7 +154,7 @@ Replace the `zjstatus.wasm` path with the installed package path. If you install
 
 Provider widgets maintain their own cache, lock, freshness, and error-backoff files under `$XDG_CACHE_HOME/nova_bar` or `$HOME/.cache/nova_bar`. CPU/RAM share one short-lived system-usage cache so command-widget bursts do not resample system metrics in every process. Use `--cache` only when overriding the default. Nova may omit it because the full runtime exports `YAZELIX_STATUS_BAR_CACHE_PATH`.
 
-Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses only the OpenAI blossom; Claude uses only a plain `C`, matching Eon. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses only the OpenAI blossom (U+EC81) and Claude only the terracotta Claude splat (U+EC82), matching Eon; both glyphs need Nerd Fonts 3.5 or newer. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
 
 The Codex glyph requires Nerd Fonts 3.5 or newer (U+EC81). Nova uses JetBrains
 Mono's patched symbol face for Rio; other terminals need glyph coverage. The mark identifies the

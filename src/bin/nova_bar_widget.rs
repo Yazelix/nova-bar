@@ -4,10 +4,10 @@ use std::process;
 
 const SESSION_TERMINAL_ENV: &str = "YAZELIX_SESSION_TERMINAL";
 const UNKNOWN_SESSION_TERMINAL: &str = "unknown";
-const CODEX_QUOTA_MAX_AGE_SECONDS: u64 = 60;
-const CODEX_QUOTA_ERROR_BACKOFF_SECONDS: u64 = 120;
-const CODEX_HISTORY_MAX_AGE_SECONDS: u64 = 600;
-const CODEX_HISTORY_ERROR_BACKOFF_SECONDS: u64 = 1_800;
+// CodexBar quota reads, as Eon schedules them: at least a minute apart, bounded by ten seconds.
+const QUOTA_MAX_AGE_SECONDS: u64 = 60;
+const QUOTA_ERROR_BACKOFF_SECONDS: u64 = 120;
+const QUOTA_TIMEOUT_MS: u64 = 10_000;
 
 fn main() {
     match run(env::args().skip(1).collect()) {
@@ -27,8 +27,8 @@ fn run(args: Vec<String>) -> Result<String, String> {
         );
     };
     match command.as_str() {
-        "claude" => run_claude_usage(rest),
-        "codex" => run_codex_usage(rest),
+        "claude" => run_quota_usage(nova_bar::QuotaProvider::Claude, rest),
+        "codex" => run_quota_usage(nova_bar::QuotaProvider::Codex, rest),
         "opencode_go" => run_opencode_go_usage(rest),
         "render-nova-runtime" => run_render_nova_runtime(rest),
         "version" => run_version(rest),
@@ -241,16 +241,16 @@ fn render_widget_command_segment(
     .map_err(|error| format!("invalid widget chrome: {}", error.code()))
 }
 
-fn run_claude_usage(args: &[String]) -> Result<String, String> {
+fn run_quota_usage(provider: nova_bar::QuotaProvider, args: &[String]) -> Result<String, String> {
+    let name = provider.name();
     let mut cache_path = None;
-    let mut display = nova_bar::AgentUsageDisplay::Both;
     let mut periods = vec![
         nova_bar::AgentUsagePeriod::FiveHour,
         nova_bar::AgentUsagePeriod::Weekly,
     ];
-    let mut max_age_seconds = 600;
-    let mut error_backoff_seconds = 1_800;
-    let mut timeout_ms = 5_000;
+    let mut max_age_seconds = QUOTA_MAX_AGE_SECONDS;
+    let mut error_backoff_seconds = QUOTA_ERROR_BACKOFF_SECONDS;
+    let mut timeout_ms = QUOTA_TIMEOUT_MS;
     let mut chrome = WidgetCommandChrome::default();
     let mut iter = args.iter();
     while let Some(arg) = iter.next() {
@@ -263,12 +263,6 @@ fn run_claude_usage(args: &[String]) -> Result<String, String> {
                     iter.next()
                         .ok_or_else(|| "--cache requires a value".to_string())?,
                 ));
-            }
-            "--display" => {
-                display = parse_agent_usage_display(
-                    iter.next()
-                        .ok_or_else(|| "--display requires a value".to_string())?,
-                )?;
             }
             "--periods" => {
                 periods = parse_agent_usage_periods(
@@ -286,129 +280,35 @@ fn run_claude_usage(args: &[String]) -> Result<String, String> {
                 timeout_ms = parse_u64_arg("--timeout-ms", iter.next())?.max(1);
             }
             _ => {
-                return Err(format!("unknown claude_usage argument: {arg}"));
+                return Err(format!("unknown {name}_usage argument: {arg}"));
             }
         }
     }
     let cache_path = cache_path
-        .or_else(nova_bar::claude_usage_cache_path_from_env)
-        .or_else(|| default_cache_path("claude_usage_cache_v1.json"))
+        .or_else(|| nova_bar::quota_usage_cache_path_from_env(provider))
+        .or_else(|| default_cache_path(&provider.cache_file_name()))
         .ok_or_else(|| {
-            "claude usage: nova_bar_widget claude [--cache <path>] [--display quota|token|both] [--periods 5h,week]".to_string()
+            format!("{name} usage: nova_bar_widget {name} [--cache <path>] [--periods 5h,week]")
         })?;
     let path_var = env::var_os("PATH");
-    let options = nova_bar::ClaudeUsageWidgetOptions {
-        cache_path: &cache_path,
-        path_var: path_var.as_deref(),
-        now_unix_seconds: unix_time_seconds(),
-        max_age_seconds,
-        error_backoff_seconds,
-        timeout: std::time::Duration::from_millis(timeout_ms),
-        display,
-        periods: &periods,
-    };
-    let text = if chrome.configured() {
-        nova_bar::claude_usage_widget_body_text(options)?
-    } else {
-        nova_bar::claude_usage_widget_text(options)?
-    };
-    render_widget_command_segment(text, &chrome)
-}
-
-fn run_codex_usage(args: &[String]) -> Result<String, String> {
-    let mut cache_path = None;
-    let mut display = nova_bar::AgentUsageDisplay::Quota;
-    let mut periods = vec![
-        nova_bar::AgentUsagePeriod::FiveHour,
-        nova_bar::AgentUsagePeriod::Weekly,
-    ];
-    let mut max_age_seconds = None;
-    let mut error_backoff_seconds = None;
-    let mut timeout_ms = 5_000;
-    let mut chrome = WidgetCommandChrome::default();
-    let mut iter = args.iter();
-    while let Some(arg) = iter.next() {
-        if parse_widget_chrome_arg(arg, &mut iter, &mut chrome)? {
-            continue;
-        }
-        match arg.as_str() {
-            "--cache" => {
-                cache_path = Some(std::path::PathBuf::from(
-                    iter.next()
-                        .ok_or_else(|| "--cache requires a value".to_string())?,
-                ));
-            }
-            "--display" => {
-                display = parse_agent_usage_display(
-                    iter.next()
-                        .ok_or_else(|| "--display requires a value".to_string())?,
-                )?;
-            }
-            "--periods" => {
-                periods = parse_agent_usage_periods(
-                    iter.next()
-                        .ok_or_else(|| "--periods requires a value".to_string())?,
-                )?;
-            }
-            "--max-age-seconds" => {
-                max_age_seconds = Some(parse_u64_arg("--max-age-seconds", iter.next())?);
-            }
-            "--error-backoff-seconds" => {
-                error_backoff_seconds =
-                    Some(parse_u64_arg("--error-backoff-seconds", iter.next())?);
-            }
-            "--timeout-ms" => {
-                timeout_ms = parse_u64_arg("--timeout-ms", iter.next())?.max(1);
-            }
-            _ => {
-                return Err(format!("unknown codex_usage argument: {arg}"));
-            }
-        }
-    }
-    let cache_path = cache_path
-        .or_else(nova_bar::codex_usage_cache_path_from_env)
-        .or_else(|| {
-            default_cache_path(&format!(
-                "codex_usage_cache_v{}.json",
-                nova_bar::CODEX_USAGE_CACHE_SCHEMA_VERSION
-            ))
-        })
-        .ok_or_else(|| {
-            "codex usage: nova_bar_widget codex [--cache <path>] [--display quota|token|both] [--periods 5h,week]".to_string()
-        })?;
-    let path_var = env::var_os("PATH");
-    let (default_max_age, default_error_backoff) = match display {
-        nova_bar::AgentUsageDisplay::Quota => (
-            CODEX_QUOTA_MAX_AGE_SECONDS,
-            CODEX_QUOTA_ERROR_BACKOFF_SECONDS,
-        ),
-        _ => (
-            CODEX_HISTORY_MAX_AGE_SECONDS,
-            CODEX_HISTORY_ERROR_BACKOFF_SECONDS,
-        ),
-    };
-    let options = nova_bar::CodexUsageWidgetOptions {
-        cache_path: &cache_path,
-        path_var: path_var.as_deref(),
-        now_unix_seconds: unix_time_seconds(),
-        max_age_seconds: max_age_seconds.unwrap_or(default_max_age),
-        error_backoff_seconds: error_backoff_seconds.unwrap_or(default_error_backoff),
-        timeout: std::time::Duration::from_millis(timeout_ms),
-        display,
-        periods: &periods,
-    };
-    let text = if chrome.configured() {
-        nova_bar::codex_usage_widget_body_text(options)?
-    } else {
-        nova_bar::codex_usage_widget_text(options)?
-    };
-    render_widget_command_segment(text, &chrome)
+    let body = nova_bar::quota_usage_widget_body_text(
+        provider,
+        nova_bar::QuotaWidgetOptions {
+            cache_path: &cache_path,
+            path_var: path_var.as_deref(),
+            now_unix_seconds: unix_time_seconds(),
+            max_age_seconds,
+            error_backoff_seconds,
+            timeout: std::time::Duration::from_millis(timeout_ms),
+            periods: &periods,
+        },
+    )?;
+    render_usage_widget(body, &chrome)
 }
 
 fn run_opencode_go_usage(args: &[String]) -> Result<String, String> {
     let mut cache_path = None;
     let mut db_paths = Vec::new();
-    let mut display = nova_bar::AgentUsageDisplay::Both;
     let mut periods = vec![
         nova_bar::AgentUsagePeriod::FiveHour,
         nova_bar::AgentUsagePeriod::Weekly,
@@ -435,12 +335,6 @@ fn run_opencode_go_usage(args: &[String]) -> Result<String, String> {
                         .ok_or_else(|| "--db requires a value".to_string())?,
                 ));
             }
-            "--display" => {
-                display = parse_agent_usage_display(
-                    iter.next()
-                        .ok_or_else(|| "--display requires a value".to_string())?,
-                )?;
-            }
             "--periods" => {
                 periods = parse_agent_usage_periods(
                     iter.next()
@@ -460,28 +354,36 @@ fn run_opencode_go_usage(args: &[String]) -> Result<String, String> {
     }
     let cache_path = cache_path
         .or_else(nova_bar::opencode_go_usage_cache_path_from_env)
-        .or_else(|| default_cache_path("opencode_go_usage_cache_v1.json"))
+        .or_else(|| {
+            default_cache_path(&format!(
+                "opencode_go_usage_cache_v{}.json",
+                nova_bar::OPENCODE_GO_USAGE_CACHE_SCHEMA_VERSION
+            ))
+        })
         .ok_or_else(|| {
-            "opencode_go usage: nova_bar_widget opencode_go [--cache <path>] [--db <path>] [--display quota|token|both] [--periods 5h,week,month]".to_string()
+            "opencode_go usage: nova_bar_widget opencode_go [--cache <path>] [--db <path>] [--periods 5h,week,month]".to_string()
         })?;
     if db_paths.is_empty() {
         db_paths = nova_bar::opencode_db_candidates_from_env();
     }
-    let options = nova_bar::OpenCodeGoUsageWidgetOptions {
-        cache_path: &cache_path,
-        db_paths: &db_paths,
-        now_unix_seconds: unix_time_seconds(),
-        max_age_seconds,
-        error_backoff_seconds,
-        display,
-        periods: &periods,
-    };
-    let text = if chrome.configured() {
-        nova_bar::opencode_go_usage_widget_body_text(options)?
+    let body =
+        nova_bar::opencode_go_usage_widget_body_text(nova_bar::OpenCodeGoUsageWidgetOptions {
+            cache_path: &cache_path,
+            db_paths: &db_paths,
+            now_unix_seconds: unix_time_seconds(),
+            max_age_seconds,
+            error_backoff_seconds,
+            periods: &periods,
+        })?;
+    render_usage_widget(body, &chrome)
+}
+
+fn render_usage_widget(body: String, chrome: &WidgetCommandChrome) -> Result<String, String> {
+    if chrome.configured() {
+        render_widget_command_segment(body, chrome)
     } else {
-        nova_bar::opencode_go_usage_widget_text(options)?
-    };
-    render_widget_command_segment(text, &chrome)
+        Ok(nova_bar::render_standalone_usage_widget(&body))
+    }
 }
 
 fn run_cpu_usage(args: &[String]) -> Result<String, String> {
@@ -507,15 +409,6 @@ fn run_system_usage_widget(args: &[String], label: &str, value: String) -> Resul
         value
     };
     render_widget_command_segment(body, &chrome)
-}
-
-fn parse_agent_usage_display(raw: &str) -> Result<nova_bar::AgentUsageDisplay, String> {
-    match raw {
-        "both" => Ok(nova_bar::AgentUsageDisplay::Both),
-        "token" | "tokens" => Ok(nova_bar::AgentUsageDisplay::Token),
-        "quota" => Ok(nova_bar::AgentUsageDisplay::Quota),
-        _ => Err(format!("invalid display mode: {raw}")),
-    }
 }
 
 fn parse_agent_usage_periods(raw: &str) -> Result<Vec<nova_bar::AgentUsagePeriod>, String> {
@@ -606,11 +499,8 @@ mod tests {
                 "yzx_control_bin": "/runtime/libexec/yzx_control",
                 "nova_bar_widget_bin": "/runtime/libexec/nova_bar_widget",
                 "runtime_dir": "/runtime",
-                "claude_usage_display": "both",
                 "claude_usage_periods": ["5h", "week"],
-                "codex_usage_display": "quota",
                 "codex_usage_periods": ["5h", "week"],
-                "opencode_go_usage_display": "both",
                 "opencode_go_usage_periods": ["5h", "week", "month"]
             })
             .to_string(),
@@ -647,7 +537,7 @@ mod tests {
         assert!(!background.contains("command_yazelix_tabs_command"));
         assert!(!background.contains("command_workspace_command"));
         assert!(background.contains(
-            "/runtime/libexec/nova_bar_widget codex --display quota --periods 5h,week --widget-frame none --widget-separator empty --widget-first false"
+            "/runtime/libexec/nova_bar_widget codex --periods 5h,week --widget-frame none --widget-separator empty --widget-first false"
         ));
         assert!(background.contains(
             "/runtime/libexec/nova_bar_widget cpu --widget-frame none --widget-separator empty --widget-first false"

@@ -61,7 +61,7 @@ It does not require:
 
 The optional provider widgets only need their own upstream facts:
 
-- `codex_usage` and `claude_usage` use `tokenusage` when it is available on `PATH`
+- `codex_usage` and `claude_usage` run the [CodexBar](https://github.com/steipete/CodexBar) CLI as `codexbar` when it is on `PATH`
 - `opencode_go_usage` reads OpenCode Go SQLite databases from default locations or explicit `--db` paths
 - `cpu` and `ram` read a shared `sysinfo`-backed cache with a short freshness window
 
@@ -154,7 +154,9 @@ Replace the `zjstatus.wasm` path with the installed package path. If you install
 
 Provider widgets maintain their own cache, lock, freshness, and error-backoff files under `$XDG_CACHE_HOME/nova_bar` or `$HOME/.cache/nova_bar`. CPU/RAM share one short-lived system-usage cache so command-widget bursts do not resample system metrics in every process. Use `--cache` only when overriding the default. Nova may omit it because the full runtime exports `YAZELIX_STATUS_BAR_CACHE_PATH`.
 
-Codex quota display queries official limits once per minute without reading or updating local session history. A failed refresh retains the last usable values and waits two minutes. Codex uses only the OpenAI blossom (U+EC81) and Claude only the terracotta Claude splat (U+EC82), matching Eon; both glyphs need Nerd Fonts 3.5 or newer. Refresh status and errors remain in the cache. Token and combined displays keep their 10-minute cache and 30-minute failure backoff because they still read local history.
+Quota widgets show Eon's text: each window's elapsed time over its length when the provider reports a reset, then the remaining percentage, with ` · ` between windows, for example `3h/5h 74% · 6d4h/7d 42%`. A window without a reset shows only its length, such as `5h 100%`. OpenCode Go's rolling windows read `5h`, `7d` and `30d`.
+
+Codex and Claude quota come from the same CodexBar reads Eon makes: `codexbar usage --provider codex --source cli` and `--provider claude --source oauth`, with JSON output. Reads are at least one minute apart and stop after ten seconds. A reading must name the requested provider and source, carry no error or estimate, be under an hour old, and report only 5-hour or 7-day windows. A window whose reset has passed is dropped. A failed read keeps the windows that have not reset and waits two minutes. CodexBar owns provider credentials; the widgets never read them. Codex uses only the OpenAI blossom (U+EC81) and Claude only the terracotta Claude splat (U+EC82), matching Eon; both glyphs need Nerd Fonts 3.5 or newer. Refresh status and errors remain in the cache.
 
 The Codex glyph requires Nerd Fonts 3.5 or newer (U+EC81). Nova uses JetBrains
 Mono's patched symbol face for Rio; other terminals need glyph coverage. The mark identifies the
@@ -169,32 +171,28 @@ The Rust crate also exposes renderer helpers for embedders that want Nova-style 
 - `render_zjstatus_tab_label_formats` for full and compact tab labels
 - `render_nova_runtime_plugin_block` for the integrated Nova zjstatus plugin block from typed runtime config, `appearance_mode`, and the child-owned runtime KDL template
 - `render_nova_runtime_background_plugin_block` for its matching session controller
-- `render_codex_usage_status_widget` for cached Codex usage facts
-- `render_windowed_agent_usage_status_widget` for Claude, OpenCode Go, or another cached windowed provider
+- `render_windowed_agent_usage_status_widget` for cached Codex, Claude, OpenCode Go, or another windowed provider
 
 Minimal cached provider example:
 
 ```rust
 use nova_bar::{
-    AgentUsageDisplay, AgentUsagePeriod, WindowedAgentUsageFacts,
-    render_windowed_agent_usage_status_widget,
+    AgentUsagePeriod, WindowedAgentUsageFacts, render_windowed_agent_usage_status_widget,
 };
 
 let text = render_windowed_agent_usage_status_widget(
     "claude",
     &WindowedAgentUsageFacts {
-        five_hour_tokens: Some(15_456_373),
-        weekly_tokens: Some(66_610_005),
         five_hour_remaining_percent: Some(49),
         weekly_remaining_percent: Some(80),
         ..WindowedAgentUsageFacts::default()
     },
     &[AgentUsagePeriod::FiveHour, AgentUsagePeriod::Weekly],
-    AgentUsageDisplay::Both,
 );
+assert_eq!(text, " [\u{ec82} 5h 49% · 7d 80%]");
 ```
 
-Those helpers are facts-in, styled-text-out. They do not read `~/.config/yazelix`, `~/.local/share/yazelix`, `yzx_control`, Nova session cache files, tokenusage, OpenCode databases, or pane-orchestrator state.
+Those helpers are facts-in, styled-text-out. They do not read `~/.config/yazelix`, `~/.local/share/yazelix`, `yzx_control`, Nova session cache files, CodexBar, OpenCode databases, or pane-orchestrator state.
 
 ## Nova-Specific Widgets
 

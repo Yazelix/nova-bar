@@ -4,9 +4,7 @@ use std::process;
 
 const SESSION_TERMINAL_ENV: &str = "YAZELIX_SESSION_TERMINAL";
 const UNKNOWN_SESSION_TERMINAL: &str = "unknown";
-// CodexBar quota reads, as Eon schedules them: at least a minute apart, bounded by ten seconds.
-const QUOTA_MAX_AGE_SECONDS: u64 = 60;
-const QUOTA_ERROR_BACKOFF_SECONDS: u64 = 120;
+// CodexBar quota reads are bounded by ten seconds, as in Eon.
 const QUOTA_TIMEOUT_MS: u64 = 10_000;
 
 fn main() {
@@ -248,8 +246,8 @@ fn run_quota_usage(provider: nova_bar::QuotaProvider, args: &[String]) -> Result
         nova_bar::AgentUsagePeriod::FiveHour,
         nova_bar::AgentUsagePeriod::Weekly,
     ];
-    let mut max_age_seconds = QUOTA_MAX_AGE_SECONDS;
-    let mut error_backoff_seconds = QUOTA_ERROR_BACKOFF_SECONDS;
+    let mut max_age_seconds = provider.default_max_age_seconds();
+    let mut error_backoff_seconds = provider.default_error_backoff_seconds();
     let mut timeout_ms = QUOTA_TIMEOUT_MS;
     let mut chrome = WidgetCommandChrome::default();
     let mut iter = args.iter();

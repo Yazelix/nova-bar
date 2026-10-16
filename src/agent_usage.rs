@@ -86,6 +86,23 @@ impl QuotaProvider {
         )
     }
 
+    /// Minimum seconds between reads. Claude's OAuth usage endpoint rate-limits frequent
+    /// readers, so Claude reads every five minutes, aligned with Eon.
+    pub fn default_max_age_seconds(self) -> u64 {
+        match self {
+            Self::Codex => 60,
+            Self::Claude => 300,
+        }
+    }
+
+    /// Seconds to wait after a failed read.
+    pub fn default_error_backoff_seconds(self) -> u64 {
+        match self {
+            Self::Codex => 120,
+            Self::Claude => 300,
+        }
+    }
+
     fn source(self) -> &'static str {
         match self {
             Self::Codex => "cli",
@@ -1418,6 +1435,15 @@ mod tests {
                 .unwrap()
         );
         let _ = std::fs::remove_dir_all(temp);
+    }
+
+    // Defends: the read cadence shared with Eon (eon-flf4): Claude every five minutes, Codex every minute.
+    #[test]
+    fn quota_read_cadence_matches_eon() {
+        assert_eq!(QuotaProvider::Claude.default_max_age_seconds(), 300);
+        assert_eq!(QuotaProvider::Claude.default_error_backoff_seconds(), 300);
+        assert_eq!(QuotaProvider::Codex.default_max_age_seconds(), 60);
+        assert_eq!(QuotaProvider::Codex.default_error_backoff_seconds(), 120);
     }
 
     // Defends: Nova's integrated cache path keeps one namespace per cache schema.
